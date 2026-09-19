@@ -34,6 +34,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Canvas Confetti -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+    <!-- MQTT JS for True Cross-Device Realtime Cloud Sync -->
+    <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -130,8 +132,8 @@
                         <span id="role-switch-label" class="inline">Оқушы экранына өту</span>
                     </button>
                     <div id="connection-status" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span id="status-text" class="hidden md:inline">🔥 Cloud Live Белесенді</span>
+                        <span id="status-ping" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span id="status-text" class="hidden md:inline">🟢 Cloud Live (Қосылуда...)</span>
                     </div>
                 </div>
             </div>
@@ -204,9 +206,18 @@
                                             <span class="font-bold text-emerald-400">Уразалы Маржан Саматқызы</span>
                                         </div>
                                     </div>
+                                    <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
+                                        <div>
+                                            <span class="text-slate-500 block text-[10px] uppercase font-semibold">Бөлме коды (Room ID):</span>
+                                            <span id="display-room-id" class="font-mono text-sm font-black text-amber-400">BIO-0000</span>
+                                        </div>
+                                        <button onclick="regenerateRoomId()" class="px-2 py-1 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 font-bold">
+                                            <i class="fa-solid fa-rotate"></i> Жанарт
+                                        </button>
+                                    </div>
                                     <div class="pt-2 border-t border-slate-800">
                                         <span class="text-slate-500 block text-[10px] uppercase font-semibold">Жүйелік статус:</span>
-                                        <span class="font-mono text-xs font-bold text-teal-400">Байланыс орнатылды (Онлайн)</span>
+                                        <span id="cloud-connection-subtext" class="font-mono text-xs font-bold text-teal-400">Бұлттық серверге қосылуда...</span>
                                     </div>
                                 </div>
                             </div>
@@ -557,6 +568,7 @@
     <script>
         window.state = {
             role: 'teacher',
+            roomId: localStorage.getItem('biohub_room_id') || ('BIO-' + Math.floor(1000 + Math.random() * 9000)),
             attendance: [],
             taskSubmissions: [],
             teams: [
@@ -578,10 +590,105 @@
             ]
         };
 
-        // BroadcastChannel for instant cross-tab & same-origin browser sync without backend dependency
+        // Save Room ID
+        localStorage.setItem('biohub_room_id', window.state.roomId);
+
+        // BroadcastChannel for same-device local fallback
         const bc = new BroadcastChannel('biohub_realtime_channel');
 
-        // Load existing saved state from localStorage or setup defaults
+        let mqttClient = null;
+
+        function initMqttCloudSync() {
+            const statusText = document.getElementById('status-text');
+            const subtext = document.getElementById('cloud-connection-subtext');
+
+            try {
+                // Connect to public WebSocket MQTT broker for free cross-device realtime messaging
+                const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+                mqttClient = mqtt.connect(brokerUrl, {
+                    clientId: 'biohub_' + Math.random().toString(16).substr(2, 8),
+                    keepalive: 30,
+                    clean: true
+                });
+
+                mqttClient.on('connect', () => {
+                    console.log("MQTT Cloud Connected successfully!");
+                    if (statusText) statusText.innerText = "🟢 Бұлттық байланыс ОНЛАЙН";
+                    if (subtext) subtext.innerText = `Байланыс орнатылды (Бөлме: ${window.state.roomId})`;
+
+                    // Subscribe to current room topic
+                    const topic = `biohub/room/${window.state.roomId}/#`;
+                    mqttClient.subscribe(topic, (err) => {
+                        if (!err) console.log(`Subscribed to topic: ${topic}`);
+                    });
+                });
+
+                mqttClient.on('message', (topic, message) => {
+                    try {
+                        const data = JSON.parse(message.toString());
+                        handleIncomingCloudMessage(data);
+                    } catch (e) {
+                        console.error("MQTT Message parse error:", e);
+                    }
+                });
+
+                mqttClient.on('error', (err) => {
+                    console.warn("MQTT Error fallback:", err);
+                    if (statusText) statusText.innerText = "🟠 Жергілікті синхрондау белсенді";
+                });
+            } catch (err) {
+                console.warn("MQTT Initialization exception:", err);
+            }
+        }
+
+        function handleIncomingCloudMessage(data) {
+            if (!data || !data.type) return;
+
+            if (data.type === 'CHECKIN') {
+                if (!window.state.attendance.some(a => a.id === data.payload.id || (a.name === data.payload.name && a.time === data.payload.time))) {
+                    window.state.attendance.unshift(data.payload);
+                    saveData();
+                    renderAttendanceList();
+                    updateMonitorStats();
+                    showToast(`🔔 ${data.payload.name} сабаққа тіркелді!`);
+                    logActivity(`[Cloud] Оқушы тіркелді: ${data.payload.name} (${data.payload.grade})`);
+                }
+            } 
+            else if (data.type === 'NOTEBOOK_UPLOAD') {
+                if (!window.state.taskSubmissions.some(t => t.id === data.payload.id)) {
+                    window.state.taskSubmissions.unshift(data.payload);
+                    saveData();
+                    renderNotebookFeed();
+                    updateMonitorStats();
+                    showToast(`📸 ${data.payload.studentName} дәптер суретін жіберді!`);
+                    logActivity(`[Cloud] Дәптер суреті түсті: ${data.payload.studentName}`);
+                }
+            }
+            else if (data.type === 'BUZZER_CLICK') {
+                handleBuzzer(data.payload.teamId, data.payload.timeStr);
+                showToast(`🔔 ${data.payload.teamId}-топ батырманы басты!`);
+            }
+            else if (data.type === 'CLEAR_ATTENDANCE') {
+                window.state.attendance = [];
+                saveData();
+                renderAttendanceList();
+                updateMonitorStats();
+            }
+        }
+
+        function broadcastMessage(type, payload) {
+            const data = { type, payload, roomId: window.state.roomId };
+
+            // 1. Same-device tab broadcast
+            bc.postMessage(data);
+
+            // 2. Cross-device MQTT Cloud publish
+            if (mqttClient && mqttClient.connected) {
+                const topic = `biohub/room/${window.state.roomId}/data`;
+                mqttClient.publish(topic, JSON.stringify(data));
+            }
+        }
+
         function loadLocalData() {
             try {
                 const att = localStorage.getItem('biohub_attendance');
@@ -603,55 +710,15 @@
             }
         }
 
-        // Listen for realtime incoming events from other tabs (Student -> Teacher)
         bc.onmessage = (event) => {
-            const data = event.data;
-            if (!data || !data.type) return;
-
-            if (data.type === 'CHECKIN') {
-                // Avoid duplicate names if needed, or add new checkin
-                window.state.attendance.unshift(data.payload);
-                saveData();
-                renderAttendanceList();
-                updateMonitorStats();
-                showToast(`🔔 ${data.payload.name} сабаққа тіркелді!`);
-                logActivity(`Оқушы тіркелді: ${data.payload.name} (${data.payload.grade})`);
-            } 
-            else if (data.type === 'NOTEBOOK_UPLOAD') {
-                window.state.taskSubmissions.unshift(data.payload);
-                saveData();
-                renderNotebookFeed();
-                updateMonitorStats();
-                showToast(`📸 ${data.payload.studentName} дәптер суретін жіберді!`);
-                logActivity(`Дәптер суреті түсті: ${data.payload.studentName}`);
-            }
-            else if (data.type === 'BUZZER_CLICK') {
-                handleBuzzer(data.payload.teamId, data.payload.timeStr);
-                showToast(`🔔 ${data.payload.teamId}-топ батырманы басты!`);
-            }
-            else if (data.type === 'CLEAR_ATTENDANCE') {
-                window.state.attendance = [];
-                saveData();
-                renderAttendanceList();
-                updateMonitorStats();
-            }
+            if (event.data) handleIncomingCloudMessage(event.data);
         };
-
     </script>
 
-    <!-- Firebase Standard Integration Script with Fallback -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'biohub-class-v1';
-        let currentUser = null;
-
-        // Global functions for HTML Form Submissions
+    <!-- Student & Teacher Actions Scripts -->
+    <script>
         window.handleStudentCheckinSubmit = async function(e) {
             e.preventDefault();
-
             const name = document.getElementById('s-name-input').value.trim();
             const grade = document.getElementById('s-class-input').value;
             const btn = document.getElementById('btn-checkin-submit');
@@ -666,19 +733,21 @@
                 const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
 
                 const payload = {
-                    id: 'att_' + Date.now(),
+                    id: 'att_' + Date.now() + '_' + Math.floor(Math.random()*1000),
                     name: name,
                     grade: grade,
                     time: timeStr,
                     timestamp: Date.now()
                 };
 
-                // 1. Broadcast to Teacher screen instantly
-                bc.postMessage({ type: 'CHECKIN', payload: payload });
+                // Broadcast live to teacher laptop
+                broadcastMessage('CHECKIN', payload);
 
-                // 2. Also save locally on student side
-                window.state.attendance.unshift(payload);
-                saveData();
+                // Local update
+                if (!window.state.attendance.some(a => a.id === payload.id)) {
+                    window.state.attendance.unshift(payload);
+                    saveData();
+                }
 
                 window.showToast("✅ Мұғалім экранына сәтті тіркелдіңіз!");
                 document.getElementById('s-name-input').value = '';
@@ -690,8 +759,7 @@
             }
         };
 
-        // Compress Student Image before sending
-        function compressImage(file, maxWidth = 800, quality = 0.65) {
+        function compressImage(file, maxWidth = 700, quality = 0.55) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -737,7 +805,7 @@
                 const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
 
                 const payload = {
-                    id: 'task_' + Date.now(),
+                    id: 'task_' + Date.now() + '_' + Math.floor(Math.random()*1000),
                     studentName: name,
                     grade: "9 А",
                     title: title,
@@ -746,11 +814,13 @@
                     timeStr: timeStr
                 };
 
-                // Broadcast image directly to teacher tab
-                bc.postMessage({ type: 'NOTEBOOK_UPLOAD', payload: payload });
+                // Broadcast image to teacher laptop
+                broadcastMessage('NOTEBOOK_UPLOAD', payload);
 
-                window.state.taskSubmissions.unshift(payload);
-                saveData();
+                if (!window.state.taskSubmissions.some(t => t.id === payload.id)) {
+                    window.state.taskSubmissions.unshift(payload);
+                    saveData();
+                }
 
                 window.showToast("📸 Дәптер суреті мұғалімге жіберілді!");
                 fileInput.value = '';
@@ -769,10 +839,7 @@
             const display = document.getElementById('master-timer-display');
             const timeStr = display ? display.innerText : "00:00";
 
-            bc.postMessage({ 
-                type: 'BUZZER_CLICK', 
-                payload: { teamId: teamId, timeStr: timeStr } 
-            });
+            broadcastMessage('BUZZER_CLICK', { teamId: teamId, timeStr: timeStr });
 
             window.handleBuzzer(teamId, timeStr);
             window.showToast("🔔 Батырма басылды!");
@@ -784,14 +851,31 @@
             saveData();
             renderAttendanceList();
             updateMonitorStats();
-            bc.postMessage({ type: 'CLEAR_ATTENDANCE' });
+            broadcastMessage('CLEAR_ATTENDANCE', {});
         };
+
+        function regenerateRoomId() {
+            window.state.roomId = 'BIO-' + Math.floor(1000 + Math.random() * 9000);
+            localStorage.setItem('biohub_room_id', window.state.roomId);
+            const display = document.getElementById('display-room-id');
+            if (display) display.innerText = window.state.roomId;
+            renderQR();
+            if (mqttClient) {
+                initMqttCloudSync();
+            }
+            showToast("Жаңа бөлме коды жасалды: " + window.state.roomId);
+        }
     </script>
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             loadLocalData();
             detectUrlParams();
+            initMqttCloudSync();
+
+            const display = document.getElementById('display-room-id');
+            if (display) display.innerText = window.state.roomId;
+
             renderAttendanceList();
             renderTeams();
             renderNotebookFeed();
@@ -803,6 +887,12 @@
 
         function detectUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            if (roomParam) {
+                window.state.roomId = roomParam;
+                localStorage.setItem('biohub_room_id', roomParam);
+            }
+
             if (urlParams.get('role') === 'student') {
                 switchRole('student');
             }
@@ -884,7 +974,7 @@
             container.innerHTML = '';
 
             const currentBase = window.location.href.split('?')[0];
-            const fullStudentUrl = `${currentBase}?role=student`;
+            const fullStudentUrl = `${currentBase}?role=student&room=${window.state.roomId}`;
 
             if (typeof QRCode !== 'undefined') {
                 new QRCode(container, {
@@ -899,9 +989,9 @@
 
         function copyStudentLink() {
             const currentBase = window.location.href.split('?')[0];
-            const fullStudentUrl = `${currentBase}?role=student`;
+            const fullStudentUrl = `${currentBase}?role=student&room=${window.state.roomId}`;
             navigator.clipboard.writeText(fullStudentUrl).then(() => {
-                showToast("Оқушылар сілтемесі көшірілді!");
+                showToast("Оқушылар сілтемесі көшірілді! (Бөлме: " + window.state.roomId + ")");
             });
         }
 
