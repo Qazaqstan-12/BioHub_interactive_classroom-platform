@@ -34,6 +34,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Canvas Confetti for Victory Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+    <!-- PeerJS for Real-Time Cross-Device WebRTC Syncing -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body {
@@ -48,7 +50,6 @@
         .buzzer-btn:active {
             transform: scale(0.95);
         }
-        /* Custom scrollbars */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -66,9 +67,9 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
-    <header class="border-b border-emerald-900/40 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 shadow-xl">
+    <header class="border-b border-emerald-900/40 bg-slate-900/95 backdrop-blur-md sticky top-0 z-40 shadow-xl">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex items-center justify-between h-16 gap-2">
                 <!-- Logo & Title -->
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">
@@ -77,46 +78,67 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-xl tracking-wide bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">BioHub</span>
-                            <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">9-Сынып</span>
+                            <span id="role-badge" class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold">
+                                👨‍🏫 Мұғалім
+                            </span>
                         </div>
-                        <p class="text-xs text-slate-400 hidden sm:block">Интерактивті Биология Оқу Инфрақұрылымы</p>
+                        <p class="text-[11px] text-slate-400 hidden sm:block">Интерактивті Биология Оқу Инфрақұрылымы</p>
                     </div>
                 </div>
 
-                <!-- Navigation Tabs -->
-                <nav class="flex items-center space-x-1 sm:space-x-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800 overflow-x-auto max-w-[50vw] md:max-w-none">
-                    <button id="nav-home" onclick="switchTab('home')" class="tab-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md whitespace-nowrap">
-                        <i class="fa-solid fa-house text-emerald-200"></i>
+                <!-- Navigation Tabs (Teacher View) -->
+                <nav id="teacher-nav" class="flex items-center space-x-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800 overflow-x-auto max-w-[45vw] md:max-w-none">
+                    <button id="nav-home" onclick="switchTab('home')" class="tab-btn flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md whitespace-nowrap">
+                        <i class="fa-solid fa-house"></i>
                         <span>Басты бет</span>
                     </button>
-                    <button id="nav-check" onclick="switchTab('check')" class="tab-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
+                    <button id="nav-check" onclick="switchTab('check')" class="tab-btn flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
                         <i class="fa-solid fa-qrcode text-emerald-400"></i>
                         <span>BioCheck</span>
                     </button>
-                    <button id="nav-timer" onclick="switchTab('timer')" class="tab-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
+                    <button id="nav-timer" onclick="switchTab('timer')" class="tab-btn flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
                         <i class="fa-solid fa-stopwatch text-teal-400"></i>
                         <span>Топтық Жарыс</span>
                     </button>
-                    <button id="nav-task" onclick="switchTab('task')" class="tab-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
+                    <button id="nav-task" onclick="switchTab('task')" class="tab-btn flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
                         <i class="fa-solid fa-camera-retro text-amber-400"></i>
                         <span>BioTask Дәптер</span>
                     </button>
-                    <button id="nav-space" onclick="switchTab('space')" class="tab-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
+                    <button id="nav-space" onclick="switchTab('space')" class="tab-btn flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
                         <i class="fa-solid fa-graduation-cap text-cyan-400"></i>
                         <span>Білім Кеңістігі</span>
                     </button>
-                    <button id="nav-monitor" onclick="switchTab('monitor')" class="tab-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
+                    <button id="nav-monitor" onclick="switchTab('monitor')" class="tab-btn flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all duration-200 whitespace-nowrap">
                         <i class="fa-solid fa-chart-pie text-emerald-400"></i>
-                        <span class="hidden md:inline">Сабақ Мониторы</span>
-                        <span class="inline md:hidden">Монитор</span>
+                        <span>Монитор</span>
                     </button>
                 </nav>
 
-                <!-- Current Time & Status -->
-                <div class="hidden lg:flex items-center space-x-4 border-l border-slate-800 pl-4">
-                    <div class="text-right">
-                        <div id="live-clock" class="text-sm font-bold text-slate-200">14:30:00</div>
-                        <div id="live-date" class="text-xs text-slate-400">--</div>
+                <!-- Navigation Tabs (Student View - Mobile Friendly) -->
+                <nav id="student-nav" class="hidden flex items-center space-x-1 bg-slate-950 p-1.5 rounded-xl border border-emerald-500/30">
+                    <button id="snav-checkin" onclick="switchStudentTab('checkin')" class="stab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">
+                        <i class="fa-solid fa-user-check mr-1"></i> Тіркелу
+                    </button>
+                    <button id="snav-upload" onclick="switchStudentTab('upload')" class="stab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">
+                        <i class="fa-solid fa-upload mr-1"></i> Дәптер
+                    </button>
+                    <button id="snav-buzzer" onclick="switchStudentTab('buzzer')" class="stab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">
+                        <i class="fa-solid fa-hand-pointer mr-1"></i> Батырма
+                    </button>
+                    <button id="snav-res" onclick="switchStudentTab('res')" class="stab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">
+                        <i class="fa-solid fa-link mr-1"></i> Ресурстар
+                    </button>
+                </nav>
+
+                <!-- Role Switcher & Live Connection Status -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="toggleRole()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-rotate-left text-emerald-400"></i>
+                        <span id="role-switch-label" class="hidden sm:inline">Оқушы экранына өту</span>
+                    </button>
+                    <div id="connection-status" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                        <span id="status-text" class="hidden md:inline">Желіге қосылуда...</span>
                     </div>
                 </div>
             </div>
@@ -126,997 +148,736 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
 
-        <!-- TAB 0: Title / Welcome Landing Page -->
-        <section id="tab-home" class="tab-content space-y-6">
-            <!-- Hero Banner -->
-            <div class="relative rounded-3xl bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 p-8 sm:p-10 border border-emerald-500/30 shadow-2xl overflow-hidden">
-                <!-- Background Glowing Circles -->
-                <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
-                <div class="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
+        <!-- ================= TEACHER VIEWS ================= -->
+        <div id="teacher-view-container">
 
-                <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                    <div class="lg:col-span-8 space-y-4">
-                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                            9-Сынып Ашық Биология Сабағы
-                        </div>
+            <!-- TAB 0: Title / Welcome Landing Page -->
+            <section id="tab-home" class="tab-content space-y-6">
+                <div class="relative rounded-3xl bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 p-8 sm:p-10 border border-emerald-500/30 shadow-2xl overflow-hidden">
+                    <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
 
-                        <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                            Интерактивті Білім Платформасы: <br/>
-                            <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">BioHub</span>
-                        </h1>
-
-                        <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-                            Заманауи сабаққа арналған цифрлық инфрақұрылым: QR-мен секунд ішінде түгендеу, топтық таймер жарыстары, дәптер жұмыстарын онлайн рейтингке жүктеу және мультимедиалық білім ресурстары.
-                        </p>
-
-                        <div class="pt-2 flex flex-wrap gap-4 items-center">
-                            <button onclick="switchTab('check')" class="px-7 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-2xl text-base shadow-xl shadow-emerald-500/25 transition duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center gap-3">
-                                <span>🚀 Сабақты Бастау (BioCheck)</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Dynamic Active Class & Lesson Control Panel -->
-                    <div class="lg:col-span-4 bg-slate-950/80 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-6 shadow-2xl relative">
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-                            <h3 class="text-xs uppercase tracking-widest font-extrabold text-emerald-400 flex items-center gap-2">
-                                <i class="fa-solid fa-layer-group"></i> Белсенді Сынып Басқару
-                            </h3>
-                            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold animate-pulse">Көпсыныпты режим</span>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-slate-400 block text-[10px] uppercase font-semibold mb-1">Қаразердегі ағымдағы сынып:</label>
-                                <select id="active-session-class" onchange="changeActiveClass(this.value)" class="w-full bg-slate-900 border border-emerald-500/40 text-emerald-300 font-bold text-sm rounded-xl px-3 py-2 outline-none focus:border-emerald-400">
-                                    <option value="ALL">Барлық сыныптар (Жалпы)</option>
-                                    <option value="9 А" selected>9 "А" сыныбы</option>
-                                    <option value="9 Ә">9 "Ә" сыныбы</option>
-                                    <option value="9 Б">9 "Б" сыныбы</option>
-                                    <option value="9 В">9 "В" сыныбы</option>
-                                    <option value="9 Г">9 "Г" сыныбы</option>
-                                    <option value="9 Ғ">9 "Ғ" сыныбы</option>
-                                    <option value="9 Д">9 "Д" сыныбы</option>
-                                </select>
+                    <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <div class="lg:col-span-8 space-y-4">
+                            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                Онлайн Тікелей Байланыс Синхроны Бродизді
                             </div>
 
-                            <div class="space-y-2 text-xs text-slate-300">
-                                <div class="flex justify-between items-center pt-2 border-t border-slate-800">
-                                    <div>
-                                        <span class="text-slate-500 block text-[10px] uppercase font-semibold">Оқытушы</span>
-                                        <span id="pass-teacher" class="font-bold text-emerald-400">Уразалы Маржан Саматқызы</span>
+                            <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                                Интерактивті Білім Платформасы: <br/>
+                                <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">BioHub Live</span>
+                            </h1>
+
+                            <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+                                Мұғалім мен оқушының телефондары арасындағы реал-тайм синхрондау жүйесі. QR-кодты тақтаға шығарыңыз, оқушылар сканерлеп, сабаққа қатысын белгілейді және суреттерін сіздің экраныңызға тікелей жібереді!
+                            </p>
+
+                            <div class="pt-2 flex flex-wrap gap-4 items-center">
+                                <button onclick="switchTab('check')" class="px-7 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-2xl text-base shadow-xl shadow-emerald-500/25 transition duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center gap-3">
+                                    <span>🚀 Тақтаға QR-кодты шығару</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Active Class & Lesson Control Panel -->
+                        <div class="lg:col-span-4 bg-slate-950/80 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-6 shadow-2xl relative">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                                <h3 class="text-xs uppercase tracking-widest font-extrabold text-emerald-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-layer-group"></i> Сабақ Паспорты
+                                </h3>
+                                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Онлайн Бөлме</span>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-slate-400 block text-[10px] uppercase font-semibold mb-1">Сыныпты таңдау:</label>
+                                    <select id="active-session-class" onchange="changeActiveClass(this.value)" class="w-full bg-slate-900 border border-emerald-500/40 text-emerald-300 font-bold text-sm rounded-xl px-3 py-2 outline-none focus:border-emerald-400">
+                                        <option value="ALL">Барлық сыныптар</option>
+                                        <option value="9 А" selected>9 "А" сыныбы</option>
+                                        <option value="9 Ә">9 "Ә" сыныбы</option>
+                                        <option value="9 Б">9 "Б" сыныбы</option>
+                                        <option value="9 В">9 "В" сыныбы</option>
+                                        <option value="9 Г">9 "Г" сыныбы</option>
+                                        <option value="9 Д">9 "Д" сыныбы</option>
+                                        <option value="9 Ғ">9 "Ғ" сыныбы</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-2 text-xs text-slate-300">
+                                    <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                                        <div>
+                                            <span class="text-slate-500 block text-[10px] uppercase font-semibold">Оқытушы</span>
+                                            <span id="pass-teacher" class="font-bold text-emerald-400">Уразалы Маржан Саматқызы</span>
+                                        </div>
+                                        <button onclick="editLessonPassport()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] rounded-lg border border-slate-700 transition">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
                                     </div>
-                                    <button onclick="editLessonPassport()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] rounded-lg border border-slate-700 transition">
-                                        <i class="fa-solid fa-pen-to-square mr-1"></i>Оқытушыны Өзгерту
-                                    </button>
+                                    <div class="pt-2 border-t border-slate-800">
+                                        <span class="text-slate-500 block text-[10px] uppercase font-semibold">Бөлме коды (Room ID):</span>
+                                        <span id="display-room-id" class="font-mono text-xs font-bold text-cyan-400">Жүктелуде...</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Features Quick Access Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div onclick="switchTab('check')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-qrcode"></i>
+                <!-- Features Quick Access Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div onclick="switchTab('check')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <h3 class="font-bold text-white text-base group-hover:text-emerald-400 transition">1. BioCheck</h3>
+                        <p class="text-xs text-slate-400 mt-1">Оқушылар QR сканерлеп, сіздің экранға автоматты түседі.</p>
                     </div>
-                    <h3 class="font-bold text-white text-base group-hover:text-emerald-400 transition">1. BioCheck</h3>
-                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">QR-код арқылы оқушылар қатысын 5 секундта түгендеу.</p>
+
+                    <div onclick="switchTab('timer')" class="bg-slate-900 border border-slate-800 hover:border-teal-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <h3 class="font-bold text-white text-base group-hover:text-teal-400 transition">2. Топтық Бәсеке</h3>
+                        <p class="text-xs text-slate-400 mt-1">Таймер, Оқушылар телефонындағы батырма (Buzzer) & Ұпайлар.</p>
+                    </div>
+
+                    <div onclick="switchTab('task')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-camera-retro"></i>
+                        </div>
+                        <h3 class="font-bold text-white text-base group-hover:text-amber-400 transition">3. BioTask Дәптер</h3>
+                        <p class="text-xs text-slate-400 mt-1">Оқушы жүктеген дәптер фотолары тура сіздің экраныңызға келеді.</p>
+                    </div>
+
+                    <div onclick="switchTab('space')" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group">
+                        <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-compass"></i>
+                        </div>
+                        <h3 class="font-bold text-white text-base group-hover:text-cyan-400 transition">4. Білім Кеңістігі</h3>
+                        <p class="text-xs text-slate-400 mt-1">Canva, Wordwall, Kahoot және дидактикалық материалдар.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 1: BioCheck Attendance -->
+            <section id="tab-check" class="tab-content hidden space-y-6">
+                <div class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-800/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="max-w-2xl relative z-10">
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                            <span class="text-emerald-400">BioCheck Live</span> — Тікелей Түгендеу Жүйесі
+                        </h1>
+                        <p class="mt-2 text-slate-300 text-sm leading-relaxed">
+                            Оқушылар мына QR-кодты өз телефондарымен сканерлеп, тіркеледі. Барлық келген оқушылар секунд ішінде осы оң жақтағы кестеде пайда болады!
+                        </p>
+                    </div>
                 </div>
 
-                <div onclick="switchTab('timer')" class="bg-slate-900 border border-slate-800 hover:border-teal-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-trophy"></i>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- QR Box for Teacher Display -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg relative">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-4">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            Тақтаға шығарылатын белсенді QR-код
+                        </div>
+                        
+                        <div id="qr-container" class="bg-white p-4 rounded-xl shadow-2xl border-4 border-emerald-500/30 flex items-center justify-center min-w-[200px] min-h-[200px]">
+                            <!-- Dynamic QR rendered here -->
+                        </div>
+                        
+                        <p class="mt-4 text-xs text-slate-400 max-w-xs">
+                            Оқушылар осы QR-кодты сканерлесе, олардың телефонында оңай тіркелу беті ашылады.
+                        </p>
+
+                        <button onclick="copyStudentLink()" class="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold rounded-lg border border-slate-700 transition flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>Сілтемені Көшіру</span>
+                        </button>
                     </div>
-                    <h3 class="font-bold text-white text-base group-hover:text-teal-400 transition">2. Топтық Жарыс</h3>
-                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Интерактивті таймер, батырма (Buzzer) және ұпай беру.</p>
+
+                    <!-- Live Attendance List -->
+                    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <i class="fa-solid fa-clipboard-user text-lg"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-white">Келген Оқушылар Тізімі (Реал-тайм)</h2>
+                                    <p class="text-xs text-slate-400" id="attendance-count">Келгендер: 0 оқушы</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button onclick="clearAttendance()" class="px-3 py-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg font-medium transition">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> Тазалау
+                                </button>
+                                <button onclick="exportAttendanceCSV()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg font-medium transition">
+                                    <i class="fa-solid fa-download mr-1"></i> CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto max-h-[380px] pr-1">
+                            <div id="attendance-list" class="space-y-2.5">
+                                <!-- Dynamic entries -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Group Timer & Competition -->
+            <section id="tab-timer" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 text-teal-400 text-xs font-bold uppercase tracking-wider">
+                                <i class="fa-solid fa-trophy"></i> Интерактивті Топтық Жарыс
+                            </div>
+                            <h2 class="text-xl font-bold text-white mt-0.5">Орталық Таймер & Топтарды Басқару</h2>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1">
+                                <button onclick="setTimerDuration(30)" class="px-3 py-1.5 text-xs font-bold rounded-lg text-slate-300 hover:bg-slate-800">30с</button>
+                                <button onclick="setTimerDuration(60)" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30">60с</button>
+                                <button onclick="setTimerDuration(120)" class="px-3 py-1.5 text-xs font-bold rounded-lg text-slate-300 hover:bg-slate-800">120с</button>
+                            </div>
+
+                            <div class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
+                                <button onclick="addTeam()" class="px-3 py-1.5 text-xs font-bold bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-lg">
+                                    <i class="fa-solid fa-plus"></i> Топ қосу
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button id="global-start-btn" onclick="startGlobalTimer()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm rounded-xl shadow-lg flex items-center gap-2">
+                                <i class="fa-solid fa-play"></i> Старт
+                            </button>
+                            <button onclick="pauseGlobalTimer()" class="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold text-sm rounded-xl border border-slate-700">
+                                <i class="fa-solid fa-pause"></i>
+                            </button>
+                            <button onclick="resetGlobalTimer()" class="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold text-sm rounded-xl border border-slate-700">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div onclick="switchTab('task')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-camera-retro"></i>
+                <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 text-center shadow-2xl relative overflow-hidden">
+                    <div id="master-timer-display" class="text-5xl sm:text-7xl font-black font-mono tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-300 to-emerald-500">
+                        01:00.<span class="text-3xl sm:text-4xl text-emerald-600">00</span>
                     </div>
-                    <h3 class="font-bold text-white text-base group-hover:text-amber-400 transition">3. BioTask Дәптер</h3>
-                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Орындалған дәптер жұмысын уақыт рейтингімен жүктеу.</p>
+                    <div id="timer-status-badge" class="inline-block mt-3 px-4 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                        Дайын
+                    </div>
                 </div>
 
-                <div onclick="switchTab('space')" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-5 shadow-lg cursor-pointer transition group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition">
-                        <i class="fa-solid fa-compass"></i>
-                    </div>
-                    <h3 class="font-bold text-white text-base group-hover:text-cyan-400 transition">4. Білім Кеңістігі</h3>
-                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Canva слайдтар, Wordwall мен Kahoot ойын сілтемелері.</p>
+                <div id="teams-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Populated dynamically -->
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- TAB 1: BioCheck Attendance -->
-        <section id="tab-check" class="tab-content hidden space-y-6">
-            <!-- Hero Header -->
-            <div class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-800/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 opacity-10 text-emerald-400 text-9xl pointer-events-none">
-                    <i class="fa-solid fa-qrcode"></i>
-                </div>
-                <div class="max-w-2xl relative z-10">
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                        <span class="text-emerald-400">BioCheck</span> — Жылдам түгендеу жүйесі
-                    </h1>
-                    <p class="mt-2 text-slate-300 text-sm sm:text-base leading-relaxed">
-                        Оқушылар тақтадағы QR-кодты өз телефондарымен сканерлеп, 5 секунд ішінде сабаққа қатысын белгілей алады. Уақытты үнемдеңіз!
-                    </p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left: QR Code Display for Teacher -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg relative">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-4">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                        Мультимедиялық тақтаға арналған QR
+            <!-- TAB 3: BioTask (Notebook Photo Submissions) -->
+            <section id="tab-task" class="tab-content hidden space-y-6">
+                <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-2">
+                            <i class="fa-solid fa-trophy"></i> Жылдамдық & Ұқыптылық
+                        </div>
+                        <h2 class="text-2xl font-black text-white">BioTask — Жүктелген Дәптер Жұмыстары</h2>
+                        <p class="text-slate-300 text-xs sm:text-sm mt-1">Оқушылар өз телефондарынан жіберген дәптер жұмыстары осы жерде уақыт ретімен тізіледі!</p>
                     </div>
-                    
-                    <!-- QR Box -->
-                    <div id="qr-container" class="bg-white p-4 rounded-xl shadow-2xl border-4 border-emerald-500/30 flex items-center justify-center min-w-[180px] min-h-[180px]">
-                        <!-- Dynamic QR rendered here -->
-                    </div>
-                    
-                    <p class="mt-4 text-xs text-slate-400 max-w-xs">
-                        Оқушылар осы QR-кодты сканерлеу арқылы телефонмен тіркеле алады.
-                    </p>
+                </div>
 
-                    <button onclick="toggleSimulatedScanModal()" class="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition flex items-center gap-2">
-                        <i class="fa-solid fa-mobile-screen"></i>
-                        <span>Оқушы телефонының көрінісін сынап көру</span>
+                <div id="notebook-feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 4: Educational Resources -->
+            <section id="tab-space" class="tab-content hidden space-y-6">
+                <div class="bg-gradient-to-r from-cyan-950/50 via-slate-900 to-slate-900 border border-cyan-500/30 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-white">Білім Кеңістігі & Ресурстар</h2>
+                        <p class="text-slate-300 text-xs sm:text-sm mt-1">Оқушыларға арналған Canva слайдтары, Wordwall ойындары мен Kahoot сілтемелері.</p>
+                    </div>
+                    <button onclick="toggleAddResourceModal()" class="px-5 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black rounded-xl text-sm shadow-lg">
+                        + Жаңа Сілтеме Қосу
                     </button>
                 </div>
 
-                <!-- Right: Attendance List & Live Status -->
-                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3 mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                <i class="fa-solid fa-clipboard-user text-lg"></i>
-                            </div>
-                            <div>
-                                <h2 class="text-lg font-bold text-white">Қатысушылар тізімі</h2>
-                                <p class="text-xs text-slate-400" id="attendance-count">Келгендер: 0 / 0</p>
-                            </div>
+                <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 5: Lesson Monitor -->
+            <section id="tab-monitor" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-users"></i>
                         </div>
-
-                        <!-- Class Filter Dropdown for Teacher -->
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <div class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800">
-                                <span class="text-[11px] text-slate-400 font-medium"><i class="fa-solid fa-filter text-emerald-400 mr-1"></i>Сынып:</span>
-                                <select id="attendance-class-filter" onchange="renderAttendanceList()" class="bg-transparent text-xs font-bold text-emerald-300 outline-none cursor-pointer">
-                                    <option value="ALL" class="bg-slate-900 text-slate-200">Барлығы (Барлық сыныптар)</option>
-                                    <option value="9 А" class="bg-slate-900 text-slate-200">9 "А"</option>
-                                    <option value="9 Ә" class="bg-slate-900 text-slate-200">9 "Ә"</option>
-                                    <option value="9 Б" class="bg-slate-900 text-slate-200">9 "Б"</option>
-                                    <option value="9 В" class="bg-slate-900 text-slate-200">9 "В"</option>
-                                    <option value="9 Г" class="bg-slate-900 text-slate-200">9 "Г"</option>
-                                    <option value="9 Ғ" class="bg-slate-900 text-slate-200">9 "Ғ"</option>
-                                    <option value="9 Д" class="bg-slate-900 text-slate-200">9 "Д"</option>
-                                </select>
-                            </div>
-
-                            <button onclick="clearAttendance()" class="px-3 py-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg font-medium transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-trash-can"></i>
-                                <span class="hidden sm:inline">Тазалау</span>
-                            </button>
-                            <button onclick="exportAttendanceCSV()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg font-medium transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-download"></i>
-                                <span>CSV Есеп</span>
-                            </button>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Келген оқушылар</p>
+                            <p id="stat-total-students" class="text-2xl font-black text-white">0</p>
                         </div>
                     </div>
-
-                    <!-- Attendance Table / Grid -->
-                    <div class="flex-1 overflow-y-auto max-h-[350px] pr-2">
-                        <div id="attendance-list" class="space-y-2.5">
-                            <!-- Populated dynamically -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Белсенді топтар</p>
+                            <p id="stat-active-teams" class="text-2xl font-black text-white">3</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Көшбасшы Топ</p>
+                            <p id="stat-leader-team" class="text-xl font-black text-amber-300">--</p>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- TAB 2: Group Timer & Competition -->
-        <section id="tab-timer" class="tab-content hidden space-y-6">
-            <!-- Controls Panel for Teacher -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <!-- Left: Title & Quick Setup -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-clock-rotate-left text-emerald-400 mr-2"></i>Сабақ Журналы (Тікелей эфир хабарламалары)</h3>
+                    <div id="activity-log" class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono space-y-2 max-h-[250px] overflow-y-auto">
+                        <p class="text-slate-500">[14:30] Жүйе дайын. Мұғалім бөлмесі ашылды.</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ================= STUDENT VIEW (ONLY ACCESSIBLE TO STUDENTS) ================= -->
+        <div id="student-view-container" class="hidden max-w-lg mx-auto space-y-6">
+            
+            <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 border border-emerald-500/30 rounded-2xl p-5 text-center shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                    🎓 Оқушы Кабинеті
+                </span>
+                <h2 class="text-xl font-extrabold text-white mt-2">BioHub — Сабаққа Қосылу</h2>
+                <p id="student-status-indicator" class="text-xs text-emerald-400 mt-1 font-semibold">
+                    <i class="fa-solid fa-wifi mr-1"></i> Мұғалім экранына онлайн қосылдыңыз!
+                </p>
+            </div>
+
+            <!-- Student Sub-Tab 1: Checkin -->
+            <div id="stab-checkin" class="student-tab-content bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-user-check text-emerald-400"></i> Сабаққа Тіркелу
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Аты-жөніңізді енгізіп, сабақта бар екеніңізді белгілеңіз</p>
+
+                <form onsubmit="handleStudentFormCheckin(event)" class="space-y-4">
                     <div>
-                        <div class="flex items-center gap-2 text-teal-400 text-xs font-bold uppercase tracking-wider">
-                            <i class="fa-solid fa-trophy"></i> Топтық Бәсеке Тақтасы
-                        </div>
-                        <h2 class="text-xl font-bold text-white mt-0.5">Интерактивті Таймер & Басқару Панелі</h2>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Сыныбыңыз</label>
+                        <select id="s-class-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-emerald-300 font-bold">
+                            <option value="9 А">9 "А" сыныбы</option>
+                            <option value="9 Ә">9 "Ә" сыныбы</option>
+                            <option value="9 Б">9 "Б" сыныбы</option>
+                            <option value="9 В">9 "В" сыныбы</option>
+                            <option value="9 Г">9 "Г" сыныбы</option>
+                            <option value="9 Д">9 "Д" сыныбы</option>
+                            <option value="9 Ғ">9 "Ғ" сыныбы</option>
+                        </select>
                     </div>
 
-                    <!-- Middle: Timer Settings -->
-                    <div class="flex flex-wrap items-center gap-3">
-                        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1">
-                            <button onclick="setTimerDuration(30)" class="px-3 py-1.5 text-xs font-bold rounded-lg text-slate-300 hover:bg-slate-800 transition">30с</button>
-                            <button onclick="setTimerDuration(60)" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30">60с</button>
-                            <button onclick="setTimerDuration(120)" class="px-3 py-1.5 text-xs font-bold rounded-lg text-slate-300 hover:bg-slate-800 transition">120с</button>
-                            <div class="flex items-center gap-1 px-2 border-l border-slate-800">
-                                <input type="number" id="custom-seconds" placeholder="сек" class="w-14 bg-transparent text-xs text-center font-bold text-slate-200 outline-none">
-                                <button onclick="setCustomTimerDuration()" class="text-xs bg-slate-800 px-2 py-1 rounded text-slate-300 hover:bg-slate-700">OK</button>
-                            </div>
-                        </div>
-
-                        <!-- Add/Remove Teams -->
-                        <div class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
-                            <button onclick="addTeam()" class="px-3 py-1.5 text-xs font-bold bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-lg transition flex items-center gap-1">
-                                <i class="fa-solid fa-plus"></i> Топ қосу
-                            </button>
-                            <button onclick="removeTeam()" class="px-3 py-1.5 text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 rounded-lg transition">
-                                <i class="fa-solid fa-minus"></i>
-                            </button>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Аты-жөніңіз (Аты тегі)</label>
+                        <input type="text" id="s-name-input" required placeholder="Мысалы: Диана Ермекова" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-emerald-500">
                     </div>
 
-                    <!-- Right: Main Timer Controls -->
-                    <div class="flex items-center gap-2">
-                        <button id="global-start-btn" onclick="startGlobalTimer()" class="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-play"></i> Старт
-                        </button>
-                        <button onclick="pauseGlobalTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700 transition">
-                            <i class="fa-solid fa-pause"></i>
-                        </button>
-                        <button onclick="resetGlobalTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700 transition">
-                            <i class="fa-solid fa-rotate-left"></i>
-                        </button>
-                    </div>
-                </div>
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Мұғалімге жіберу (Қатыстым)</span>
+                    </button>
+                </form>
             </div>
 
-            <!-- Main Display: Global Master Clock -->
-            <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 text-center shadow-2xl relative overflow-hidden">
-                <div class="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Негізгі Уақыт</div>
-                <div id="master-timer-display" class="text-5xl sm:text-7xl font-black font-mono tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-300 to-emerald-500">
-                    01:00.<span class="text-3xl sm:text-4xl text-emerald-600">00</span>
-                </div>
-                <!-- Status Banner -->
-                <div id="timer-status-badge" class="inline-block mt-3 px-4 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">
-                    Дайын
-                </div>
-            </div>
+            <!-- Student Sub-Tab 2: Notebook Photo Upload -->
+            <div id="stab-upload" class="student-tab-content hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-amber-400"></i> Дәптер Тапсырмасын Жүктеу
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Орындалған дәптер жұмысын фотоға түсіріп, мұғалімге жіберіңіз</p>
 
-            <!-- Teams Dynamic Grid Container -->
-            <div id="teams-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <!-- Dynamically populated team cards will appear here -->
-            </div>
-        </section>
-
-        <!-- TAB 3: BioTask (Notebook Photo Upload & Ranked Feed) -->
-        <section id="tab-task" class="tab-content hidden space-y-6">
-            <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-2">
-                        <i class="fa-solid fa-trophy"></i> Жылдамдық & Ұқыптылық Рейтингі
+                <form onsubmit="handleStudentFormUpload(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Аты-жөніңіз</label>
+                        <input type="text" id="su-name-input" required placeholder="Атыңыз" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white">
                     </div>
-                    <h2 class="text-2xl font-black text-white">BioTask — Дәптер Жұмысын Тексеру</h2>
-                    <p class="text-slate-300 text-xs sm:text-sm mt-1">Оқушылар орындалған тапсырма суретін жүктейді. Жүйе жүктеу реті мен уақытын автоматты түрде тіркеп, орын береді!</p>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Тапсырма Тақырыбы</label>
+                        <input type="text" id="su-title-input" placeholder="Мысалы: Митоз фазалары" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Дәптер Суретін Таңдау</label>
+                        <input type="file" id="su-file-input" accept="image/*" required class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500/20 file:text-amber-400">
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Мұғалім экранына жіберу</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Student Sub-Tab 3: Group Buzzer -->
+            <div id="stab-buzzer" class="student-tab-content hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl text-center">
+                <h3 class="text-lg font-bold text-white mb-2">🔔 Топтық Батырма (Buzzer)</h3>
+                <p class="text-xs text-slate-400 mb-6">Топпен жауап дайын болғанда осы батырманы басыңыз!</p>
+
+                <div class="mb-4">
+                    <select id="s-team-select" class="bg-slate-950 border border-slate-800 text-emerald-300 text-sm font-bold rounded-xl px-4 py-2">
+                        <option value="1">1-топ: Митохондрия</option>
+                        <option value="2">2-топ: ДНҚ</option>
+                        <option value="3">3-топ: Нейрон</option>
+                    </select>
                 </div>
 
-                <button onclick="toggleUploadModal()" class="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-sm shadow-lg shadow-amber-500/20 transition flex items-center gap-2 whitespace-nowrap self-start md:self-center">
-                    <i class="fa-solid fa-cloud-arrow-up text-base"></i>
-                    <span>+ Дәптер Суретін Жүктеу</span>
+                <button onclick="triggerStudentBuzzer()" class="w-48 h-48 rounded-full bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-slate-950 font-black text-xl shadow-2xl shadow-emerald-500/40 border-8 border-slate-950 active:scale-90 transition mx-auto flex flex-col items-center justify-center gap-2">
+                    <i class="fa-solid fa-hand-pointer text-4xl"></i>
+                    <span>ЖАУАП ДАЙЫН!</span>
                 </button>
             </div>
 
-            <!-- Uploaded Work Grid -->
-            <div id="notebook-feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Dynamically populated task submission cards -->
-            </div>
-        </section>
-
-        <!-- TAB 4: Educational Resources & Links Hub -->
-        <section id="tab-space" class="tab-content hidden space-y-6">
-            <div class="bg-gradient-to-r from-cyan-950/50 via-slate-900 to-slate-900 border border-cyan-500/30 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-2">
-                        <i class="fa-solid fa-compass"></i> Дидактикалық Ресурстар
-                    </div>
-                    <h2 class="text-2xl font-black text-white">Менің Білім Беру Кеңістігім</h2>
-                    <p class="text-slate-300 text-xs sm:text-sm mt-1">Сабаққа дайындалған Слайдтар (Canva/PPT), Wordwall ойындары, Kahoot тесттері мен видео-материалдар жинағы.</p>
-                </div>
-
-                <button onclick="toggleAddResourceModal()" class="px-5 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-sm shadow-lg shadow-cyan-500/20 transition flex items-center gap-2 whitespace-nowrap self-start md:self-center">
-                    <i class="fa-solid fa-link text-base"></i>
-                    <span>+ Жаңа Сілтеме Қосу</span>
-                </button>
-            </div>
-
-            <!-- Resources Category Cards Grid -->
-            <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Populated dynamically via JS -->
-            </div>
-        </section>
-
-        <!-- TAB 5: Lesson Analytics & Monitor -->
-        <section id="tab-monitor" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Stat Card 1 -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400 font-medium">Жалпы қатысушылар</p>
-                        <p id="stat-total-students" class="text-2xl font-black text-white mt-0.5">0</p>
-                    </div>
-                </div>
-
-                <!-- Stat Card 2 -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-award"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400 font-medium">Белсенді топтар</p>
-                        <p id="stat-active-teams" class="text-2xl font-black text-white mt-0.5">3</p>
-                    </div>
-                </div>
-
-                <!-- Stat Card 3 -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-bolt"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400 font-medium">Көшбасшы Топ</p>
-                        <p id="stat-leader-team" class="text-xl font-black text-amber-300 mt-0.5">--</p>
-                    </div>
+            <!-- Student Sub-Tab 4: Resources -->
+            <div id="stab-res" class="student-tab-content hidden space-y-4">
+                <h3 class="text-lg font-bold text-white">📚 Сабақ Материалдары</h3>
+                <div id="student-resources-grid" class="space-y-3">
+                    <!-- Dynamic -->
                 </div>
             </div>
 
-            <!-- Leaderboard & Summary -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Team Leaderboard Table -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
-                    <h3 class="text-base font-bold text-white flex items-center gap-2 mb-4">
-                        <i class="fa-solid fa-ranking-star text-amber-400"></i>
-                        Топтардың Тұрақты Рейтингі
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-300">
-                            <thead class="text-xs text-slate-400 uppercase bg-slate-950/50 border-b border-slate-800">
-                                <tr>
-                                    <th class="px-4 py-3">Орын</th>
-                                    <th class="px-4 py-3">Топ атауы</th>
-                                    <th class="px-4 py-3 text-right">Ұпай</th>
-                                </tr>
-                            </thead>
-                            <tbody id="monitor-leaderboard-body" class="divide-y divide-slate-800">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Quick Lesson Notes / Activity Log -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col">
-                    <h3 class="text-base font-bold text-white flex items-center gap-2 mb-4">
-                        <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i>
-                        Сабақ Журналы (Лог)
-                    </h3>
-                    <div id="activity-log" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono space-y-2 overflow-y-auto max-h-[220px]">
-                        <p class="text-slate-500">[14:30] Жүйе іске қосылды. Дайындық аяқталды.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        </div>
 
     </main>
 
-    <!-- Modal 1: Simulated Student Attendance Scan Screen -->
-    <div id="student-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
-            <button onclick="toggleSimulatedScanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 text-xl">
-                    <i class="fa-solid fa-user-check"></i>
-                </div>
-                <h3 class="text-lg font-bold text-white">BioCheck Тіркелу</h3>
-                <p class="text-xs text-slate-400 mt-1">Өз сыныбыңызды таңдап, аты-жөніңізді енгізіңіз</p>
-            </div>
-
-            <form id="student-checkin-form" onsubmit="handleStudentCheckIn(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Сыныбыңызды Таңдаңыз <span class="text-emerald-400">*</span></label>
-                    <select id="student-class-select" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-emerald-300 font-bold focus:outline-none focus:border-emerald-500 transition">
-                        <option value="9 А" selected>9 "А" сыныбы</option>
-                        <option value="9 Ә">9 "Ә" сыныбы</option>
-                        <option value="9 Б">9 "Б" сыныбы</option>
-                        <option value="9 В">9 "В" сыныбы</option>
-                        <option value="9 Г">9 "Г" сыныбы</option>
-                        <option value="9 Ғ">9 "Ғ" сыныбы</option>
-                        <option value="9 Д">9 "Д" сыныбы</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Аты-жөніңіз (Аты тегі) <span class="text-emerald-400">*</span></label>
-                    <input type="text" id="student-name-input" required placeholder="Мысалы: Арман Серіков" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-circle-plus"></i>
-                    <span>➕ Қатыстым деп белгілеу</span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal 2: Task Photo Upload Modal -->
-    <div id="upload-task-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-amber-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <button onclick="toggleUploadModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            <div class="text-center mb-5">
-                <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-2 border border-amber-500/20 text-xl">
-                    <i class="fa-solid fa-file-arrow-up"></i>
-                </div>
-                <h3 class="text-lg font-bold text-white">Дәптер Тапсырмасын Жүктеу</h3>
-                <p class="text-xs text-slate-400 mt-1">Орындаған жұмысыңызды суретке түсіріп жіберіңіз</p>
-            </div>
-
-            <form onsubmit="handleTaskSubmission(event)" class="space-y-4">
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="col-span-1">
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Сынып</label>
-                        <select id="task-student-class" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2.5 text-xs text-amber-300 font-bold focus:outline-none focus:border-amber-500">
-                            <option value="9 А">9 "А"</option>
-                            <option value="9 Ә">9 "Ә"</option>
-                            <option value="9 Б">9 "Б"</option>
-                            <option value="9 В">9 "В"</option>
-                            <option value="9 Г">9 "Г"</option>
-                            <option value="9 Ғ">9 "Ғ"</option>
-                            <option value="9 Д">9 "Д"</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Оқушы Аты-Жөні</label>
-                        <input type="text" id="task-student-name" required placeholder="Мысалы: Диана Ермекова" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Тапсырма Сұрағы / Тақырыбы</label>
-                    <input type="text" id="task-title-input" placeholder="Мысалы: 1-жаттығу. Клетка құрылысы" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Дәптер Суретін Таңдау</label>
-                    <input type="file" id="task-file-input" accept="image/*" required class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500/20 file:text-amber-400 hover:file:bg-amber-500/30">
-                </div>
-
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    <span>Жіберу & Рейтингке өту</span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal 3: Resource Link Addition Modal -->
-    <div id="add-resource-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <button onclick="toggleAddResourceModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            <div class="text-center mb-5">
-                <div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-2xl flex items-center justify-center mx-auto mb-2 border border-cyan-500/20 text-xl">
-                    <i class="fa-solid fa-plus-minus"></i>
-                </div>
-                <h3 class="text-lg font-bold text-white">Жаңа Білім Ресурсын Қосу</h3>
-                <p class="text-xs text-slate-400 mt-1">Слайд, ойын немесе видео сілтемесін орналастырыңыз</p>
-            </div>
-
-            <form onsubmit="handleAddResource(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Категориясы</label>
-                    <select id="res-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-                        <option value="slide">📊 Сабақ Слайдтары (Canva / PPT)</option>
-                        <option value="game">🎮 Интерактивті Ойын (Wordwall/Kahoot/Quizizz)</option>
-                        <option value="video">🎥 Видео Сабақ / Таныстырылым</option>
-                        <option value="other">📁 Қосымша Материал</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Ресурс Атауы</label>
-                    <input type="text" id="res-title" required placeholder="Мысалы: Митоз бен Мейоз Wordwall Ойыны" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-cyan-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Сілтеме URL (Link)</label>
-                    <input type="url" id="res-url" required placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-cyan-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Қысқаша Сипаттамасы</label>
-                    <input type="text" id="res-desc" placeholder="Мысалы: 9-сыныпқа арналған бекіту сұрақтары" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-cyan-500">
-                </div>
-
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-save"></i>
-                    <span>Сақтау және қосу</span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal 4: Fullscreen Notebook Image Viewer -->
+    <!-- Modal: Image Viewer -->
     <div id="image-viewer-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden" onclick="toggleImageViewer()">
-        <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center">
-            <img id="viewer-img-target" src="" class="max-h-[80vh] max-w-full rounded-2xl border-2 border-emerald-500/50 shadow-2xl object-contain">
-            <p id="viewer-img-caption" class="text-white text-sm font-bold mt-3 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800"></p>
+        <div class="relative max-w-4xl w-full flex flex-col items-center">
+            <img id="viewer-img-target" src="" class="max-h-[80vh] rounded-2xl border-2 border-emerald-500/50 shadow-2xl object-contain">
+            <p id="viewer-img-caption" class="text-white text-sm font-bold mt-3 bg-slate-900 px-4 py-2 rounded-xl border border-slate-800"></p>
         </div>
     </div>
 
     <script>
-        // Global Application State
+        // Global App State
         let state = {
+            role: "teacher", // 'teacher' or 'student'
+            roomId: null,
+            peer: null,
+            connections: [],
+            broadcastChannel: null, // Fallback for restricted WebSockets / Canvas environment
             activeClass: "ALL",
             attendance: [
                 { id: 1, name: "Әлішер Аманжол", grade: "9 А", time: "14:28", status: "present" },
-                { id: 2, name: "Диана Ермекова", grade: "9 Ә", time: "14:29", status: "present" },
-                { id: 3, name: "Санжар Нұрланов", grade: "9 Б", time: "14:30", status: "present" },
-                { id: 4, name: "Аружан Сәбит", grade: "9 В", time: "14:31", status: "present" }
+                { id: 2, name: "Диана Ермекова", grade: "9 Ә", time: "14:29", status: "present" }
             ],
             teams: [
-                { id: 1, name: "1-топ: Митохондрия", score: 10, timeStopped: null, icon: "fa-bolt", color: "emerald" },
-                { id: 2, name: "2-топ: ДНҚ", score: 15, timeStopped: null, icon: "fa-dna", color: "teal" },
-                { id: 3, name: "3-топ: Нейрон", score: 5, timeStopped: null, icon: "fa-brain", color: "purple" }
+                { id: 1, name: "1-топ: Митохондрия", score: 10, timeStopped: null, icon: "fa-bolt" },
+                { id: 2, name: "2-топ: ДНҚ", score: 15, timeStopped: null, icon: "fa-dna" },
+                { id: 3, name: "3-топ: Нейрон", score: 5, timeStopped: null, icon: "fa-brain" }
             ],
-            taskSubmissions: [
-                {
-                    id: 1,
-                    studentName: "Диана Ермекова",
-                    grade: "9 Ә",
-                    title: "Клетка құрылысын салыстыру",
-                    imageUrl: "https://placehold.co/600x400/0f172a/10b981?text=Дәптер+жұмысы:+Диана+(9+Ә)",
-                    timestamp: Date.now() - 300000,
-                    timeStr: "14:25:12"
-                },
-                {
-                    id: 2,
-                    studentName: "Әлішер Аманжол",
-                    grade: "9 А",
-                    title: "ДНҚ репликация схемасы",
-                    imageUrl: "https://placehold.co/600x400/0f172a/06b6d4?text=Дәптер+жұмысы:+Әлішер+(9+А)",
-                    timestamp: Date.now() - 150000,
-                    timeStr: "14:27:45"
-                }
-            ],
+            taskSubmissions: [],
             resources: [
-                {
-                    id: 1,
-                    category: "slide",
-                    title: "9-Сынып: Жасушаның Бөлінуі (Canva Слайд)",
-                    url: "https://www.canva.com",
-                    desc: "Сабақтың негізгі презентациясы мен иллюстрациялары",
-                    icon: "fa-file-powerpoint text-amber-400"
-                },
-                {
-                    id: 2,
-                    category: "game",
-                    title: "Wordwall: ДНҚ және РНҚ айырмашылығы",
-                    url: "https://wordwall.net",
-                    desc: "Сабақты бекітуге арналған интерактивті сәйкестендіру ойыны",
-                    icon: "fa-gamepad text-emerald-400"
-                },
-                {
-                    id: 3,
-                    category: "game",
-                    title: "Kahoot Тест: Митоз бен Мейоз фазалары",
-                    url: "https://kahoot.com",
-                    desc: "Жылдам қайталауға арналған 10 сұрақты экспресс-тест",
-                    icon: "fa-circle-question text-purple-400"
-                },
-                {
-                    id: 4,
-                    category: "video",
-                    title: "BilimLand: Жасуша органоидтарының қызметі",
-                    url: "https://youtube.com",
-                    desc: "3 минуттық анимациялық түсіндірме видео",
-                    icon: "fa-circle-play text-red-400"
-                }
+                { id: 1, title: "9-Сынып: Жасушаның Бөлінуі (Canva Слайд)", url: "https://www.canva.com", desc: "Сабақтың негізгі презентациясы" },
+                { id: 2, title: "Wordwall: ДНҚ және РНҚ айырмашылығы", url: "https://wordwall.net", desc: "Интерактивті сәйкестендіру ойыны" }
             ],
-            timer: {
-                durationSeconds: 60,
-                remainingMilliseconds: 60000,
-                intervalId: null,
-                isRunning: false,
-                lastTime: 0
-            }
+            timer: { durationSeconds: 60, remainingMilliseconds: 60000, intervalId: null, isRunning: false, lastTime: 0 }
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            initClock();
-            renderQR();
+            detectUrlParams();
+            initPeerConnection();
             renderAttendanceList();
             renderTeams();
             renderNotebookFeed();
             renderResources();
             updateMasterTimerDisplay();
             updateMonitorStats();
-            loadLocalStorage();
         });
 
-        function switchTab(tabId) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.add('hidden'));
+        // URL Parameters Detection for Student Auto-Role
+        // WebRTC Real-Time Sync Logic via PeerJS with BroadcastChannel Fallback
+        function initPeerConnection() {
+            const statusText = document.getElementById('status-text');
+            const displayRoom = document.getElementById('display-room-id');
 
-            const selectedTab = document.getElementById(`tab-${tabId}`);
-            if (selectedTab) selectedTab.classList.remove('hidden');
+            // Set up fallback BroadcastChannel for Canvas / WebSocket restricted environments
+            const roomIdForChannel = state.roomId || 'biohub-local-room';
+            state.roomId = state.roomId || ('biohub-' + Math.floor(1000 + Math.random() * 9000));
+            if (displayRoom) displayRoom.innerText = state.roomId;
 
-            const navBtns = document.querySelectorAll('.tab-btn');
-            navBtns.forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
-                btn.classList.add('text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-900');
-            });
-
-            const activeBtn = document.getElementById(`nav-${tabId}`);
-            if (activeBtn) {
-                activeBtn.classList.remove('text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-900');
-                activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
+            try {
+                if ('BroadcastChannel' in window) {
+                    state.broadcastChannel = new BroadcastChannel('biohub_sync_channel');
+                    state.broadcastChannel.onmessage = (event) => {
+                        if (event.data) {
+                            handleIncomingData(event.data);
+                        }
+                    };
+                }
+            } catch (bcError) {
+                console.warn('BroadcastChannel initialization fallback error:', bcError);
             }
 
-            if (tabId === 'check') renderQR();
-            if (tabId === 'monitor') updateMonitorStats();
-        }
+            // Attempt PeerJS WebRTC initialization safely
+            try {
+                if (state.role === 'teacher') {
+                    state.peer = new Peer(state.roomId);
 
-        function editLessonPassport() {
-            const teacherEl = document.getElementById('pass-teacher');
+                    state.peer.on('open', (id) => {
+                        console.log('Teacher Peer Room created:', id);
+                        if (statusText) statusText.innerText = "Оқушыларды күтуде (Онлайн WebRTC)";
+                        renderQR();
+                    });
 
-            const currentTeacher = teacherEl ? teacherEl.innerText.trim() : '';
-            const newTeacher = window.prompt("Оқытушы аты-жөнін енгізіңіз:", currentTeacher);
-            if (newTeacher !== null && newTeacher.trim() !== '') {
-                if (teacherEl) teacherEl.innerText = newTeacher.trim();
-                logActivity(`Оқытушы аты-жөні жаңартылды: ${newTeacher.trim()}`);
+                    state.peer.on('connection', (conn) => {
+                        state.connections.push(conn);
+                        if (statusText) statusText.innerText = `Байланысты: ${state.connections.length} оқушы`;
+
+                        conn.on('data', (data) => {
+                            handleIncomingData(data);
+                        });
+                    });
+
+                    state.peer.on('error', (err) => {
+                        console.warn('PeerJS WebSockets restricted, falling back to BroadcastChannel:', err);
+                        if (statusText) statusText.innerText = "Жергілікті синхрон режимі (Broadcast)";
+                    });
+
+                } else {
+                    // Student connects to Teacher Room
+                    state.peer = new Peer();
+                    state.peer.on('open', () => {
+                        if (state.roomId) {
+                            const conn = state.peer.connect(state.roomId);
+                            conn.on('open', () => {
+                                state.connections.push(conn);
+                                if (statusText) statusText.innerText = "Мұғалімге онлайн қосылды";
+                                logActivity("Мұғалім экранына сәтті қосылдыңыз!");
+                            });
+
+                            conn.on('error', (err) => {
+                                console.warn('Student connection error:', err);
+                            });
+                        }
+                    });
+
+                    state.peer.on('error', (err) => {
+                        console.warn('Student PeerJS error, using BroadcastChannel:', err);
+                        if (statusText) statusText.innerText = "Жергілікті режим (Broadcast)";
+                    });
+                }
+            } catch (err) {
+                console.warn('WebSocket / PeerJS security blocked by environment. Using BroadcastChannel fallback.', err);
+                if (statusText) statusText.innerText = "Жергілікті бродкаст режимі";
             }
         }
 
-        function changeActiveClass(selectedClass) {
-            state.activeClass = selectedClass;
-            const filterEl = document.getElementById('attendance-class-filter');
-            if (filterEl) filterEl.value = selectedClass;
-            renderAttendanceList();
-            logActivity(`Белсенді сынып режимі ауыстырылды: ${selectedClass === 'ALL' ? 'Барлық сыныптар' : selectedClass}`);
+        function handleIncomingData(payload) {
+            if (!payload || !payload.type) return;
+
+            if (payload.type === 'CHECKIN') {
+                const data = payload.data;
+                const existing = state.attendance.find(a => a.name.toLowerCase() === data.name.toLowerCase());
+                if (!existing) {
+                    state.attendance.unshift(data);
+                    renderAttendanceList();
+                    updateMonitorStats();
+                    safeConfetti({ particleCount: 30, spread: 60 });
+                    logActivity(`✅ ЖАҢА ОҚУШЫ ТІРКЕЛДІ: ${data.name} (${data.grade})`);
+                }
+            } else if (payload.type === 'TASK') {
+                state.taskSubmissions.unshift(payload.data);
+                renderNotebookFeed();
+                safeConfetti({ particleCount: 50, spread: 80 });
+                logActivity(`📸 ДӘПТЕР ЖҮКТЕЛДІ: ${payload.data.studentName} (${payload.data.grade})`);
+            } else if (payload.type === 'BUZZER') {
+                handleBuzzer(payload.teamId);
+            }
         }
 
-        function toggleSimulatedScanModal() {
-            const modal = document.getElementById('student-modal');
-            if (modal) modal.classList.toggle('hidden');
-        }
+        function sendToTeacher(payload) {
+            let sentViaPeer = false;
 
-        function toggleUploadModal() {
-            const modal = document.getElementById('upload-task-modal');
-            if (modal) modal.classList.toggle('hidden');
-        }
-
-        function handleStudentCheckIn(e) {
-            e.preventDefault();
-            const nameInput = document.getElementById('student-name-input');
-            const classSelect = document.getElementById('student-class-select');
-            
-            if (!nameInput || !nameInput.value.trim() || !classSelect) return;
-
-            const name = nameInput.value.trim();
-            const selectedClass = classSelect.value;
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
-
-            const existing = state.attendance.find(a => a.name.toLowerCase() === name.toLowerCase() && a.grade === selectedClass);
-            if (existing) {
-                existing.status = 'present';
-                existing.time = timeStr;
-            } else {
-                state.attendance.push({
-                    id: Date.now(),
-                    name: name,
-                    grade: selectedClass,
-                    time: timeStr,
-                    status: 'present'
+            // 1. Try sending via WebRTC connections
+            if (state.connections.length > 0) {
+                state.connections.forEach(conn => {
+                    try {
+                        conn.send(payload);
+                        sentViaPeer = true;
+                    } catch (e) {
+                        console.warn('Failed to send via PeerJS connection:', e);
+                    }
                 });
             }
 
-            renderAttendanceList();
-            saveLocalStorage();
-            updateMonitorStats();
-            toggleSimulatedScanModal();
-            logActivity(`✅ Тіркелу: ${name} (${selectedClass} сыныбы)`);
-            safeConfetti({ particleCount: 35, spread: 60 });
-            nameInput.value = '';
-        }
-
-        function startGlobalTimer() {
-            if (state.timer.isRunning) return;
-            state.timer.isRunning = true;
-            state.timer.lastTime = Date.now();
-
-            const startBtn = document.getElementById('global-start-btn');
-            if (startBtn) startBtn.classList.add('opacity-50', 'pointer-events-none');
-
-            const statusBadge = document.getElementById('timer-status-badge');
-            if (statusBadge) {
-                statusBadge.innerText = "Уақыт жүріп жатыр...";
-                statusBadge.className = "inline-block mt-3 px-4 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse";
-            }
-
-            state.timer.intervalId = setInterval(() => {
-                const now = Date.now();
-                const delta = now - state.timer.lastTime;
-                state.timer.lastTime = now;
-                state.timer.remainingMilliseconds -= delta;
-
-                if (state.timer.remainingMilliseconds <= 0) {
-                    state.timer.remainingMilliseconds = 0;
-                    pauseGlobalTimer();
-                    if (statusBadge) {
-                        statusBadge.innerText = "Уақыт аяқталды!";
-                        statusBadge.className = "inline-block mt-3 px-4 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30";
-                    }
-                    logActivity("⏱️ Таймер уақыты аяқталды!");
+            // 2. Try sending via BroadcastChannel (works cross-tab on same domain/origin inside Canvas/sandboxes)
+            if (state.broadcastChannel) {
+                try {
+                    state.broadcastChannel.postMessage(payload);
+                } catch (e) {
+                    console.warn('Failed to send via BroadcastChannel:', e);
                 }
-                updateMasterTimerDisplay();
-            }, 50);
-        }
+            }
 
-        function pauseGlobalTimer() {
-            state.timer.isRunning = false;
-            if (state.timer.intervalId) clearInterval(state.timer.intervalId);
-
-            const startBtn = document.getElementById('global-start-btn');
-            if (startBtn) startBtn.classList.remove('opacity-50', 'pointer-events-none');
-
-            const statusBadge = document.getElementById('timer-status-badge');
-            if (statusBadge && state.timer.remainingMilliseconds > 0) {
-                statusBadge.innerText = "Кідіртілді";
-                statusBadge.className = "inline-block mt-3 px-4 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+            // 3. Fallback for single-tab testing or when WebSockets are blocked
+            if (!sentViaPeer) {
+                handleIncomingData(payload);
             }
         }
 
-        function resetGlobalTimer() {
-            pauseGlobalTimer();
-            state.timer.remainingMilliseconds = state.timer.durationSeconds * 1000;
-            state.teams.forEach(t => t.timeStopped = null);
-            renderTeams();
-            updateMasterTimerDisplay();
+        // Student Actions
+        function handleStudentFormCheckin(e) {
+            e.preventDefault();
+            const name = document.getElementById('s-name-input').value.trim();
+            const grade = document.getElementById('s-class-input').value;
+            if (!name) return;
 
-            const statusBadge = document.getElementById('timer-status-badge');
-            if (statusBadge) {
-                statusBadge.innerText = "Дайын";
-                statusBadge.className = "inline-block mt-3 px-4 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700";
-            }
-            logActivity("Таймер бастапқы қалыпқа келтірілді.");
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
+
+            const payload = {
+                type: 'CHECKIN',
+                data: { id: Date.now(), name: name, grade: grade, time: timeStr, status: 'present' }
+            };
+
+            sendToTeacher(payload);
+            alert("✅ Тіркелгеніңіз мұғалім экранына жіберілді!");
+            document.getElementById('s-name-input').value = '';
         }
 
-        function updateMasterTimerDisplay() {
-            const display = document.getElementById('master-timer-display');
-            if (!display) return;
-            const totalMs = state.timer.remainingMilliseconds;
-            const totalSec = Math.floor(totalMs / 1000);
-            const mins = Math.floor(totalSec / 60);
-            const secs = totalSec % 60;
-            const ms = Math.floor((totalMs % 1000) / 10);
+        function handleStudentFormUpload(e) {
+            e.preventDefault();
+            const name = document.getElementById('su-name-input').value.trim();
+            const title = document.getElementById('su-title-input').value.trim() || "Дәптер тапсырмасы";
+            const fileInput = document.getElementById('su-file-input');
 
-            const mStr = String(mins).padStart(2, '0');
-            const sStr = String(secs).padStart(2, '0');
-            const msStr = String(ms).padStart(2, '0');
+            if (!name || !fileInput.files[0]) return;
 
-            display.innerHTML = `${mStr}:${sStr}.<span class="text-3xl sm:text-4xl text-emerald-600">${msStr}</span>`;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
+
+                const payload = {
+                    type: 'TASK',
+                    data: {
+                        id: Date.now(),
+                        studentName: name,
+                        grade: "9 А",
+                        title: title,
+                        imageUrl: evt.target.result,
+                        timestamp: Date.now(),
+                        timeStr: timeStr
+                    }
+                };
+
+                sendToTeacher(payload);
+                alert("📸 Дәптер суреті мұғалім экранына сәтті жүктелді!");
+                document.getElementById('su-name-input').value = '';
+                fileInput.value = '';
+            };
+            reader.readAsDataURL(fileInput.files[0]);
         }
 
-        function setTimerDuration(seconds) {
-            state.timer.durationSeconds = seconds;
-            resetGlobalTimer();
+        function triggerStudentBuzzer() {
+            const teamId = parseInt(document.getElementById('s-team-select').value);
+            sendToTeacher({ type: 'BUZZER', teamId: teamId });
+            alert("🔔 Мұғалім экранындағы таймер тоқтатылды!");
         }
 
-        function setCustomTimerDuration() {
-            const input = document.getElementById('custom-seconds');
-            if (!input || !input.value) return;
-            const val = parseInt(input.value);
-            if (val > 0) {
-                setTimerDuration(val);
-                input.value = '';
-            }
-        }
+        // Navigation Switchers
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            const selected = document.getElementById(`tab-${tabId}`);
+            if (selected) selected.classList.remove('hidden');
 
-        function addTeam() {
-            const teamNum = state.teams.length + 1;
-            const colors = ["emerald", "teal", "cyan", "purple", "amber", "indigo", "rose"];
-            const icons = ["fa-bolt", "fa-dna", "fa-brain", "fa-atom", "fa-microscope", "fa-vial", "fa-fire"];
-
-            const chosenColor = colors[(teamNum - 1) % colors.length];
-            const chosenIcon = icons[(teamNum - 1) % icons.length];
-
-            state.teams.push({
-                id: Date.now(),
-                name: `${teamNum}-топ`,
-                score: 0,
-                timeStopped: null,
-                icon: chosenIcon,
-                color: chosenColor
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-emerald-600', 'text-white');
+                b.classList.add('text-slate-400');
             });
+            const active = document.getElementById(`nav-${tabId}`);
+            if (active) active.classList.add('bg-emerald-600', 'text-white');
 
-            renderTeams();
-            updateMonitorStats();
-            logActivity(`Жаңа топ қосылды: ${teamNum}-топ`);
+            if (tabId === 'check') renderQR();
         }
 
-        function removeTeam() {
-            if (state.teams.length > 1) {
-                const removed = state.teams.pop();
-                renderTeams();
-                updateMonitorStats();
-                logActivity(`Топ өшірілді: ${removed.name}`);
-            }
+        function switchStudentTab(tabId) {
+            document.querySelectorAll('.student-tab-content').forEach(t => t.classList.add('hidden'));
+            const selected = document.getElementById(`stab-${tabId}`);
+            if (selected) selected.classList.remove('hidden');
+
+            document.querySelectorAll('.stab-btn').forEach(b => {
+                b.classList.remove('bg-emerald-600', 'text-white');
+                b.classList.add('text-slate-400');
+            });
+            const active = document.getElementById(`snav-${tabId}`);
+            if (active) active.classList.add('bg-emerald-600', 'text-white');
         }
 
-        function renderTeams() {
-            const container = document.getElementById('teams-container');
-            if (!container) return;
-
-            container.innerHTML = state.teams.map((t) => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-base">
-                                <i class="fa-solid ${t.icon || 'fa-users'}"></i>
-                            </div>
-                            <input type="text" value="${t.name}" onchange="updateTeamName(${t.id}, this.value)" class="bg-transparent text-white font-bold text-base outline-none border-b border-transparent focus:border-emerald-400">
-                        </div>
-                        <div class="text-right">
-                            <span class="text-2xl font-black text-emerald-400">${t.score}</span>
-                            <span class="text-[10px] text-slate-400 block font-semibold">ұпай</span>
-                        </div>
-                    </div>
-
-                    <button onclick="handleBuzzer(${t.id})" ${t.timeStopped !== null ? 'disabled' : ''} class="w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition shadow-lg buzzer-btn ${t.timeStopped !== null ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-emerald-500/20'}">
-                        <i class="fa-solid fa-hand-pointer mr-2"></i>
-                        ${t.timeStopped !== null ? `Тоқтаған уақыты: ${t.timeStopped}` : 'Жауап Дайын! (STOP)'}
-                    </button>
-
-                    <div class="flex items-center justify-between pt-2">
-                        <span class="text-xs text-slate-400 font-semibold">Ұпай беру:</span>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="updateTeamScore(${t.id}, 10)" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold">+10</button>
-                            <button onclick="updateTeamScore(${t.id}, 5)" class="px-2.5 py-1 bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/30 rounded-lg text-xs font-bold">+5</button>
-                            <button onclick="updateTeamScore(${t.id}, -5)" class="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold">-5</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function handleBuzzer(teamId) {
-            const team = state.teams.find(t => t.id === teamId);
-            if (!team || team.timeStopped !== null) return;
-
-            const display = document.getElementById('master-timer-display');
-            const timeText = display ? display.innerText : "00:00.00";
-
-            team.timeStopped = timeText;
-            renderTeams();
-            safeConfetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
-            logActivity(`🔔 ${team.name} батырманы басты! Уақыты: ${timeText}`);
-        }
-
-        function updateTeamName(teamId, newName) {
-            const team = state.teams.find(t => t.id === teamId);
-            if (team && newName.trim()) {
-                team.name = newName.trim();
-                updateMonitorStats();
-            }
-        }
-
-        function updateTeamScore(teamId, delta) {
-            const team = state.teams.find(t => t.id === teamId);
-            if (team) {
-                team.score = Math.max(0, team.score + delta);
-                renderTeams();
-                updateMonitorStats();
-                logActivity(`⭐ ${team.name}: ${delta > 0 ? '+' + delta : delta} ұпай`);
-            }
-        }
-
+        // QR Code Generator
         function renderQR() {
             const container = document.getElementById('qr-container');
             if (!container) return;
             container.innerHTML = '';
 
-            const currentUrl = window.location.href || 'https://biohub.edu.kz';
+            const currentBase = window.location.origin + window.location.pathname;
+            const fullStudentUrl = `${currentBase}?role=student&room=${state.roomId}`;
 
             if (typeof QRCode !== 'undefined') {
                 new QRCode(container, {
-                    text: currentUrl,
-                    width: 160,
-                    height: 160,
+                    text: fullStudentUrl,
+                    width: 180,
+                    height: 180,
                     colorDark: "#0a0f0d",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
+                    colorLight: "#ffffff"
                 });
-            } else {
-                container.innerHTML = `
-                    <div class="text-center p-4">
-                        <i class="fa-solid fa-qrcode text-6xl text-slate-800"></i>
-                        <p class="text-[10px] text-slate-500 mt-2">QR код модулі</p>
-                    </div>
-                `;
             }
         }
 
-        function initClock() {
-            function update() {
-                const now = new Date();
-                const timeEl = document.getElementById('live-clock');
-                const dateEl = document.getElementById('live-date');
-                if (timeEl) timeEl.innerText = now.toLocaleTimeString('kk-KZ');
-                if (dateEl) dateEl.innerText = now.toLocaleDateString('kk-KZ', { year: 'numeric', month: 'long', day: 'numeric' });
-            }
-            update();
-            setInterval(update, 1000);
+        function copyStudentLink() {
+            const currentBase = window.location.origin + window.location.pathname;
+            const fullStudentUrl = `${currentBase}?role=student&room=${state.roomId}`;
+            navigator.clipboard.writeText(fullStudentUrl).then(() => {
+                alert("Оқушыларға арналған сілтеме көшірілді!\n" + fullStudentUrl);
+            });
         }
 
-        function clearAttendance() {
-            state.attendance = [];
-            renderAttendanceList();
-            updateMonitorStats();
-            saveLocalStorage();
-            logActivity("Қатысушылар тізімі тазаланды.");
-        }
-
+        // Render Helpers
         function renderAttendanceList() {
             const container = document.getElementById('attendance-list');
             const countEl = document.getElementById('attendance-count');
-            const filterEl = document.getElementById('attendance-class-filter');
             if (!container) return;
 
-            const selectedFilter = filterEl ? filterEl.value : 'ALL';
+            if(countEl) countEl.innerText = `Келгендер: ${state.attendance.length} оқушы`;
 
-            const filteredList = selectedFilter === 'ALL' 
-                ? state.attendance 
-                : state.attendance.filter(a => a.grade === selectedFilter);
-
-            if (countEl) {
-                countEl.innerText = `Келгендер: ${filteredList.length} ${selectedFilter !== 'ALL' ? '(' + selectedFilter + ')' : ''}`;
-            }
-
-            if (filteredList.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-slate-500">
-                        <i class="fa-solid fa-users-slash text-3xl mb-2"></i>
-                        <p class="text-xs">Тізімде әлі бұл сынып оқушылары жоқ.</p>
-                    </div>
-                `;
+            if (state.attendance.length === 0) {
+                container.innerHTML = `<p class="text-center py-6 text-slate-500 text-xs">Әлі оқушылар тіркелген жоқ. QR-кодты сканерлеуді өтініңіз.</p>`;
                 return;
             }
 
-            container.innerHTML = filteredList.map(a => `
+            container.innerHTML = state.attendance.map(a => `
                 <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
                             <i class="fa-solid fa-user-check"></i>
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-slate-200 text-xs sm:text-sm">${a.name}</h4>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                                    ${a.grade || '9 А'}
-                                </span>
-                            </div>
+                            <h4 class="font-bold text-slate-200 text-xs sm:text-sm">${a.name} (${a.grade})</h4>
                             <span class="text-[10px] text-slate-400">Тіркелген уақыты: ${a.time}</span>
                         </div>
                     </div>
@@ -1127,59 +888,49 @@
             `).join('');
         }
 
-        function exportAttendanceCSV() {
-            if (state.attendance.length === 0) return;
-            let csvContent = "data:text/csv;charset=utf-8,ID,Аты-жөні,Сыныбы,Уақыты,Мәртебесі\n";
-            state.attendance.forEach(a => {
-                csvContent += `${a.id},"${a.name}","${a.grade || '9 А'}",${a.time},Келді\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `BioHub_Attendance_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            logActivity("CSV есеп жүктелді.");
+        function renderTeams() {
+            const container = document.getElementById('teams-container');
+            if (!container) return;
+
+            container.innerHTML = state.teams.map(t => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid ${t.icon} text-emerald-400"></i>
+                            <span class="font-bold text-white text-base">${t.name}</span>
+                        </div>
+                        <span class="text-2xl font-black text-emerald-400">${t.score} ұпай</span>
+                    </div>
+
+                    <button onclick="handleBuzzer(${t.id})" ${t.timeStopped !== null ? 'disabled' : ''} class="w-full py-3.5 rounded-xl font-bold text-xs uppercase ${t.timeStopped !== null ? 'bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950'}">
+                        ${t.timeStopped !== null ? `Тоқтады: ${t.timeStopped}` : 'Жауап Дайын! (STOP)'}
+                    </button>
+
+                    <div class="flex items-center justify-end gap-1.5">
+                        <button onclick="updateTeamScore(${t.id}, 10)" class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold">+10</button>
+                        <button onclick="updateTeamScore(${t.id}, 5)" class="px-2.5 py-1 bg-teal-500/10 text-teal-400 border border-teal-500/30 rounded text-xs font-bold">+5</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function handleTaskSubmission(e) {
-            e.preventDefault();
-            const studentName = document.getElementById('task-student-name').value.trim();
-            const studentClass = document.getElementById('task-student-class').value;
-            const title = document.getElementById('task-title-input').value.trim() || "Дәптер тапсырмасы";
-            const fileInput = document.getElementById('task-file-input');
+        function handleBuzzer(teamId) {
+            const team = state.teams.find(t => t.id === teamId);
+            if (!team || team.timeStopped !== null) return;
+            const display = document.getElementById('master-timer-display');
+            team.timeStopped = display ? display.innerText : "00:00";
+            renderTeams();
+            safeConfetti({ particleCount: 50 });
+            logActivity(`🔔 ${team.name} батырманы басты! Уақыты: ${team.timeStopped}`);
+        }
 
-            if (!studentName || !fileInput.files || !fileInput.files[0]) return;
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function(evt) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                state.taskSubmissions.unshift({
-                    id: Date.now(),
-                    studentName: studentName,
-                    grade: studentClass,
-                    title: title,
-                    imageUrl: evt.target.result,
-                    timestamp: Date.now(),
-                    timeStr: timeStr
-                });
-
-                renderNotebookFeed();
-                toggleUploadModal();
-                logActivity(`📸 Жаңа дәптер жұмысы жүктелді: ${studentName} (${studentClass})`);
-                safeConfetti({ particleCount: 40, spread: 60 });
-                
-                document.getElementById('task-student-name').value = '';
-                document.getElementById('task-title-input').value = '';
-                fileInput.value = '';
-            };
-
-            reader.readAsDataURL(file);
+        function updateTeamScore(teamId, delta) {
+            const team = state.teams.find(t => t.id === teamId);
+            if (team) {
+                team.score += delta;
+                renderTeams();
+                updateMonitorStats();
+            }
         }
 
         function renderNotebookFeed() {
@@ -1187,194 +938,134 @@
             if (!container) return;
 
             if (state.taskSubmissions.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-12 text-slate-500 bg-slate-900 border border-slate-800 rounded-2xl">
-                        <i class="fa-solid fa-camera text-4xl mb-3 text-slate-600"></i>
-                        <p class="font-bold text-slate-400">Әлі ешқандай дәптер жұмысы жүктелген жоқ.</p>
-                        <p class="text-xs mt-1">Оқушылар орындаған тапсырма суретін бірінші болып қосыңыз!</p>
-                    </div>
-                `;
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 bg-slate-900 border border-slate-800 rounded-2xl">Әлі оқушылар сурет жүктеген жоқ.</div>`;
                 return;
             }
 
-            const sortedBySpeed = [...state.taskSubmissions].sort((a, b) => a.timestamp - b.timestamp);
-
-            container.innerHTML = state.taskSubmissions.map((submission) => {
-                const rankIndex = sortedBySpeed.findIndex(s => s.id === submission.id);
-                const rankBadges = ["🥇 1-Орын", "🥈 2-Орын", "🥉 3-Орын"];
-                const rankBadgeText = rankIndex < 3 ? rankBadges[rankIndex] : `#${rankIndex + 1} Реттілік`;
-                const rankBg = rankIndex === 0 ? 'bg-amber-500 text-slate-950 font-black' : rankIndex === 1 ? 'bg-slate-300 text-slate-950 font-bold' : rankIndex === 2 ? 'bg-amber-700 text-white font-bold' : 'bg-slate-800 text-slate-300';
-
-                return `
-                    <div class="bg-slate-900 border border-slate-800 hover:border-amber-500/40 rounded-2xl overflow-hidden shadow-xl flex flex-col transition duration-300">
-                        <div class="relative group cursor-pointer overflow-hidden bg-slate-950 h-52 flex items-center justify-center" onclick="openImageViewer('${submission.imageUrl}', '${submission.studentName} (${submission.grade || '9 А'}) — ${submission.title}')">
-                            <img src="${submission.imageUrl}" alt="${submission.studentName}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-2">
-                                <i class="fa-solid fa-magnifying-glass-plus text-xl"></i>
-                                <span>Үлкейтіп қарау</span>
-                            </div>
-                            <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs shadow-lg ${rankBg}">
-                                ${rankBadgeText}
-                            </span>
-                        </div>
-                        <div class="p-4 flex-1 flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
-                                    <span class="font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800"><i class="fa-regular fa-clock mr-1 text-amber-400"></i>${submission.timeStr}</span>
-                                    <span class="text-amber-400 font-extrabold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">${submission.grade || '9 А'}</span>
-                                </div>
-                                <h4 class="font-bold text-white text-base mt-1 line-clamp-1">${submission.studentName}</h4>
-                                <p class="text-xs text-slate-300 mt-0.5 line-clamp-2">${submission.title}</p>
-                            </div>
-                        </div>
+            container.innerHTML = state.taskSubmissions.map(s => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <img src="${s.imageUrl}" onclick="openImageViewer('${s.imageUrl}', '${s.studentName}')" class="w-full h-48 object-cover cursor-pointer hover:scale-105 transition">
+                    <div class="p-4">
+                        <span class="text-xs text-amber-400 font-bold">${s.grade} • ${s.timeStr}</span>
+                        <h4 class="font-bold text-white text-base mt-1">${s.studentName}</h4>
+                        <p class="text-xs text-slate-300">${s.title}</p>
                     </div>
-                `;
-            }).join('');
-        }
-
-        function openImageViewer(url, caption) {
-            const modal = document.getElementById('image-viewer-modal');
-            const img = document.getElementById('viewer-img-target');
-            const cap = document.getElementById('viewer-img-caption');
-            if (modal && img) {
-                img.src = url;
-                if(cap) cap.innerText = caption;
-                modal.classList.remove('hidden');
-            }
-        }
-
-        function toggleImageViewer() {
-            const modal = document.getElementById('image-viewer-modal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function toggleAddResourceModal() {
-            const modal = document.getElementById('add-resource-modal');
-            if (modal) modal.classList.toggle('hidden');
-        }
-
-        function handleAddResource(e) {
-            e.preventDefault();
-            const cat = document.getElementById('res-category').value;
-            const title = document.getElementById('res-title').value.trim();
-            const url = document.getElementById('res-url').value.trim();
-            const desc = document.getElementById('res-desc').value.trim();
-
-            if (!title || !url) return;
-
-            let icon = "fa-link text-cyan-400";
-            if (cat === "slide") icon = "fa-file-powerpoint text-amber-400";
-            else if (cat === "game") icon = "fa-gamepad text-emerald-400";
-            else if (cat === "video") icon = "fa-circle-play text-red-400";
-
-            state.resources.push({
-                id: Date.now(),
-                category: cat,
-                title: title,
-                url: url,
-                desc: desc || "Сабаққа арналған цифрлық ресурс",
-                icon: icon
-            });
-
-            renderResources();
-            saveLocalStorage();
-            toggleAddResourceModal();
-            logActivity(`🔗 Жаңа білім ресурсы қосылды: ${title}`);
-
-            document.getElementById('res-title').value = '';
-            document.getElementById('res-url').value = '';
-            document.getElementById('res-desc').value = '';
+                </div>
+            `).join('');
         }
 
         function renderResources() {
             const container = document.getElementById('resources-grid');
             if (!container) return;
-
-            container.innerHTML = state.resources.map((res) => `
-                <div class="bg-slate-900 border border-slate-800 hover:border-cyan-500/40 rounded-2xl p-5 shadow-xl flex flex-col justify-between transition duration-300">
+            container.innerHTML = state.resources.map(r => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
                     <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-lg">
-                                <i class="fa-solid ${res.icon}"></i>
-                            </div>
-                            <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                                ${res.category === 'slide' ? 'Презентация' : res.category === 'game' ? 'Интерактив' : res.category === 'video' ? 'Видео' : 'Ресурс'}
-                            </span>
-                        </div>
-                        <h4 class="font-bold text-white text-base leading-snug mb-1">${res.title}</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">${res.desc}</p>
+                        <h4 class="font-bold text-white text-base mb-1">${r.title}</h4>
+                        <p class="text-xs text-slate-400">${r.desc}</p>
                     </div>
-
-                    <a href="${res.url}" target="_blank" class="mt-5 w-full py-2.5 bg-slate-950 hover:bg-slate-800 text-cyan-300 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                        <span>Сілтемені Ашу</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
+                    <a href="${r.url}" target="_blank" class="mt-4 py-2 bg-slate-950 text-cyan-300 text-center rounded-xl text-xs font-bold">Сілтемені Ашу</a>
                 </div>
             `).join('');
+        }
+
+        function renderStudentResources() {
+            const container = document.getElementById('student-resources-grid');
+            if (!container) return;
+            container.innerHTML = state.resources.map(r => `
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-white text-sm">${r.title}</h4>
+                        <p class="text-xs text-slate-400">${r.desc}</p>
+                    </div>
+                    <a href="${r.url}" target="_blank" class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold">Ашу</a>
+                </div>
+            `).join('');
+        }
+
+        // Timer Functions
+        function startGlobalTimer() {
+            if (state.timer.isRunning) return;
+            state.timer.isRunning = true;
+            state.timer.lastTime = Date.now();
+            state.timer.intervalId = setInterval(() => {
+                const now = Date.now();
+                state.timer.remainingMilliseconds -= (now - state.timer.lastTime);
+                state.timer.lastTime = now;
+                if (state.timer.remainingMilliseconds <= 0) {
+                    state.timer.remainingMilliseconds = 0;
+                    pauseGlobalTimer();
+                }
+                updateMasterTimerDisplay();
+            }, 50);
+        }
+
+        function pauseGlobalTimer() {
+            state.timer.isRunning = false;
+            if (state.timer.intervalId) clearInterval(state.timer.intervalId);
+        }
+
+        function resetGlobalTimer() {
+            pauseGlobalTimer();
+            state.timer.remainingMilliseconds = state.timer.durationSeconds * 1000;
+            state.teams.forEach(t => t.timeStopped = null);
+            renderTeams();
+            updateMasterTimerDisplay();
+        }
+
+        function updateMasterTimerDisplay() {
+            const display = document.getElementById('master-timer-display');
+            if (!display) return;
+            const totalSec = Math.floor(state.timer.remainingMilliseconds / 1000);
+            const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+            const secs = String(totalSec % 60).padStart(2, '0');
+            display.innerHTML = `${mins}:${secs}.<span class="text-3xl text-emerald-600">00</span>`;
+        }
+
+        function setTimerDuration(s) { state.timer.durationSeconds = s; resetGlobalTimer(); }
+        function addTeam() {
+            state.teams.push({ id: Date.now(), name: `${state.teams.length + 1}-топ`, score: 0, timeStopped: null, icon: "fa-bolt" });
+            renderTeams();
         }
 
         function updateMonitorStats() {
             const totalStudentsEl = document.getElementById('stat-total-students');
             const activeTeamsEl = document.getElementById('stat-active-teams');
-            const leaderTeamEl = document.getElementById('stat-leader-team');
-            const tableBody = document.getElementById('monitor-leaderboard-body');
-
             if(totalStudentsEl) totalStudentsEl.innerText = state.attendance.length;
             if(activeTeamsEl) activeTeamsEl.innerText = state.teams.length;
+        }
 
-            const sorted = [...state.teams].sort((a, b) => b.score - a.score);
-            if (sorted.length > 0 && leaderTeamEl) {
-                leaderTeamEl.innerText = `${sorted[0].name} (${sorted[0].score} ұпай)`;
-            }
-
-            if (tableBody) {
-                tableBody.innerHTML = sorted.map((t, i) => `
-                    <tr class="hover:bg-slate-950/30 transition">
-                        <td class="px-4 py-2.5 font-bold ${i===0?'text-amber-400':i===1?'text-slate-300':'text-amber-600'}">
-                            ${i===0?'🥇 1':i===1?'🥈 2':i===2?'🥉 3':i+1}
-                        </td>
-                        <td class="px-4 py-2.5 font-semibold text-slate-200">${t.name}</td>
-                        <td class="px-4 py-2.5 text-right font-black text-emerald-400">${t.score}</td>
-                    </tr>
-                `).join('');
+        function openImageViewer(url, caption) {
+            const modal = document.getElementById('image-viewer-modal');
+            const img = document.getElementById('viewer-img-target');
+            if (modal && img) {
+                img.src = url;
+                modal.classList.remove('hidden');
             }
         }
 
+        function toggleImageViewer() {
+            document.getElementById('image-viewer-modal').classList.add('hidden');
+        }
+
+        function clearAttendance() {
+            state.attendance = [];
+            renderAttendanceList();
+            updateMonitorStats();
+        }
+
         function safeConfetti(options) {
-            if (typeof confetti === 'function') {
-                try { confetti(options); } catch (e) { console.warn("Confetti error:", e); }
-            }
+            if (typeof confetti === 'function') confetti(options);
         }
 
         function logActivity(text) {
             const logEl = document.getElementById('activity-log');
             if(!logEl) return;
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const timeStr = now.toLocaleTimeString('kk-KZ');
             const p = document.createElement('p');
             p.className = "text-slate-300";
             p.innerText = `[${timeStr}] ${text}`;
             logEl.prepend(p);
-        }
-
-        function saveLocalStorage() {
-            try {
-                localStorage.setItem('biohub_attendance', JSON.stringify(state.attendance));
-                localStorage.setItem('biohub_resources', JSON.stringify(state.resources));
-            } catch (e) {
-                console.warn("LocalStorage save issue:", e);
-            }
-        }
-
-        function loadLocalStorage() {
-            try {
-                const savedAtt = localStorage.getItem('biohub_attendance');
-                if (savedAtt) state.attendance = JSON.parse(savedAtt);
-                const savedRes = localStorage.getItem('biohub_resources');
-                if (savedRes) state.resources = JSON.parse(savedRes);
-            } catch (e) {
-                console.warn("LocalStorage load issue:", e);
-            }
         }
     </script>
 </body>
