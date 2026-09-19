@@ -125,9 +125,9 @@
 
                 <!-- Role Switcher Button & Realtime Status -->
                 <div class="flex items-center space-x-2">
-                    <button onclick="toggleRole()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+                    <button onclick="toggleRole()" class="px-3 py-1.5 text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 font-bold rounded-xl border border-emerald-500/40 transition flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-mobile-screen-button text-emerald-400"></i>
-                        <span id="role-switch-label" class="hidden sm:inline">Оқушы экранына өту</span>
+                        <span id="role-switch-label" class="inline">Оқушы экранына өту</span>
                     </button>
                     <div id="connection-status" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -193,6 +193,7 @@
                                         <option value="9 Б">9 "Б" сыныбы</option>
                                         <option value="9 В">9 "В" сыныбы</option>
                                         <option value="9 Г">9 "Г" сыныбы</option>
+                                        <option value="9 Д">9 "Д" сыныбы</option>
                                     </select>
                                 </div>
 
@@ -460,6 +461,7 @@
                             <option value="9 Б">9 "Б" сыныбы</option>
                             <option value="9 В">9 "В" сыныбы</option>
                             <option value="9 Г">9 "Г" сыныбы</option>
+                            <option value="9 Д">9 "Д" сыныбы</option>
                         </select>
                     </div>
 
@@ -551,104 +553,104 @@
         <span id="toast-msg">Сәтті орындалды!</span>
     </div>
 
-    <!-- Firebase Standard Integration Script -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- Live Realtime Sync & Broadcast System -->
+    <script>
+        window.state = {
+            role: 'teacher',
+            attendance: [],
+            taskSubmissions: [],
+            teams: [
+                { id: 1, name: '1-топ: Митохондрия', icon: 'fa-bolt', score: 0, timeStopped: null },
+                { id: 2, name: '2-топ: ДНҚ', icon: 'fa-dna', score: 0, timeStopped: null },
+                { id: 3, name: '3-топ: Нейрон', icon: 'fa-brain', score: 0, timeStopped: null }
+            ],
+            timer: {
+                isRunning: false,
+                durationSeconds: 60,
+                remainingMilliseconds: 60000,
+                intervalId: null,
+                lastTime: null
+            },
+            resources: [
+                { title: 'Canva Демонстрациясы', desc: 'Биологиялық молекулалар слайды', url: 'https://canva.com' },
+                { title: 'Wordwall Тапсырмасы', desc: 'ДНҚ және РНҚ айырмашылықтары', url: 'https://wordwall.net' },
+                { title: 'Kahoot Тест', desc: 'Жасуша құрылысы викторинасы', url: 'https://kahoot.it' }
+            ]
+        };
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'biohub-class-v1';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyDemoDummyKeyForBioHubApp123456",
-                authDomain: "biohub-demo.firebaseapp.com",
-                projectId: "biohub-demo",
-                storageBucket: "biohub-demo.appspot.com",
-                messagingSenderId: "1234567890",
-                appId: "1:1234567890:web:abcdef123456"
-            };
+        // BroadcastChannel for instant cross-tab & same-origin browser sync without backend dependency
+        const bc = new BroadcastChannel('biohub_realtime_channel');
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let currentUser = null;
-
-        // Ensure Auth precedes any Database Operation (Rule 3)
-        async function authenticateUser() {
+        // Load existing saved state from localStorage or setup defaults
+        function loadLocalData() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
-                    currentUser = cred.user;
-                } else {
-                    const cred = await signInAnonymously(auth);
-                    currentUser = cred.user;
-                }
-                console.log("Firebase Auth success, UID:", currentUser.uid);
-                setupRealtimeListeners();
-            } catch (err) {
-                console.warn("Auth initialization warning, retrying anonymous auth...", err);
-                try {
-                    const cred = await signInAnonymously(auth);
-                    currentUser = cred.user;
-                    setupRealtimeListeners();
-                } catch(e) {
-                    console.error("Auth completely failed", e);
-                }
+                const att = localStorage.getItem('biohub_attendance');
+                if (att) window.state.attendance = JSON.parse(att);
+
+                const tasks = localStorage.getItem('biohub_notebooks');
+                if (tasks) window.state.taskSubmissions = JSON.parse(tasks);
+            } catch(e) {
+                console.warn("Storage access warning", e);
             }
         }
 
-        function setupRealtimeListeners() {
-            if (!currentUser) return;
-
-            // Strict Path Compliance (Rule 1)
-            const attendanceRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
-            const notebooksRef = collection(db, 'artifacts', appId, 'public', 'data', 'notebooks');
-            const buzzersRef = collection(db, 'artifacts', appId, 'public', 'data', 'buzzers');
-
-            // 1. Attendance Listener
-            onSnapshot(attendanceRef, (snapshot) => {
-                const list = [];
-                snapshot.forEach(docSnap => {
-                    list.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                // Sort by time in memory (Rule 2)
-                list.sort((a, b) => b.timestamp - a.timestamp);
-                window.state.attendance = list;
-                window.renderAttendanceList();
-                window.updateMonitorStats();
-            }, (err) => console.warn("Attendance listener warning:", err));
-
-            // 2. Notebook Submissions Listener
-            onSnapshot(notebooksRef, (snapshot) => {
-                const list = [];
-                snapshot.forEach(docSnap => {
-                    list.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                list.sort((a, b) => b.timestamp - a.timestamp);
-                window.state.taskSubmissions = list;
-                window.renderNotebookFeed();
-                window.updateMonitorStats();
-            }, (err) => console.warn("Notebooks listener warning:", err));
-
-            // 3. Buzzer Listener
-            onSnapshot(buzzersRef, (snapshot) => {
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data && data.teamId) {
-                        window.handleBuzzer(data.teamId, data.timeStr);
-                    }
-                });
-            }, (err) => console.warn("Buzzer listener warning:", err));
+        function saveData() {
+            try {
+                localStorage.setItem('biohub_attendance', JSON.stringify(window.state.attendance));
+                localStorage.setItem('biohub_notebooks', JSON.stringify(window.state.taskSubmissions));
+            } catch(e) {
+                console.warn("Storage save error", e);
+            }
         }
+
+        // Listen for realtime incoming events from other tabs (Student -> Teacher)
+        bc.onmessage = (event) => {
+            const data = event.data;
+            if (!data || !data.type) return;
+
+            if (data.type === 'CHECKIN') {
+                // Avoid duplicate names if needed, or add new checkin
+                window.state.attendance.unshift(data.payload);
+                saveData();
+                renderAttendanceList();
+                updateMonitorStats();
+                showToast(`🔔 ${data.payload.name} сабаққа тіркелді!`);
+                logActivity(`Оқушы тіркелді: ${data.payload.name} (${data.payload.grade})`);
+            } 
+            else if (data.type === 'NOTEBOOK_UPLOAD') {
+                window.state.taskSubmissions.unshift(data.payload);
+                saveData();
+                renderNotebookFeed();
+                updateMonitorStats();
+                showToast(`📸 ${data.payload.studentName} дәптер суретін жіберді!`);
+                logActivity(`Дәптер суреті түсті: ${data.payload.studentName}`);
+            }
+            else if (data.type === 'BUZZER_CLICK') {
+                handleBuzzer(data.payload.teamId, data.payload.timeStr);
+                showToast(`🔔 ${data.payload.teamId}-топ батырманы басты!`);
+            }
+            else if (data.type === 'CLEAR_ATTENDANCE') {
+                window.state.attendance = [];
+                saveData();
+                renderAttendanceList();
+                updateMonitorStats();
+            }
+        };
+
+    </script>
+
+    <!-- Firebase Standard Integration Script with Fallback -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'biohub-class-v1';
+        let currentUser = null;
 
         // Global functions for HTML Form Submissions
         window.handleStudentCheckinSubmit = async function(e) {
             e.preventDefault();
-            if (!currentUser) {
-                await authenticateUser();
-            }
 
             const name = document.getElementById('s-name-input').value.trim();
             const grade = document.getElementById('s-class-input').value;
@@ -663,26 +665,32 @@
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
 
-                const attendanceRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
-                await addDoc(attendanceRef, {
+                const payload = {
+                    id: 'att_' + Date.now(),
                     name: name,
                     grade: grade,
                     time: timeStr,
                     timestamp: Date.now()
-                });
+                };
+
+                // 1. Broadcast to Teacher screen instantly
+                bc.postMessage({ type: 'CHECKIN', payload: payload });
+
+                // 2. Also save locally on student side
+                window.state.attendance.unshift(payload);
+                saveData();
 
                 window.showToast("✅ Мұғалім экранына сәтті тіркелдіңіз!");
                 document.getElementById('s-name-input').value = '';
             } catch (err) {
                 console.error("Checkin error:", err);
-                alert("Қате орын алды, қайта байқап көріңіз!");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Мұғалімге Жіберу (Сабақтамын)</span>`;
             }
         };
 
-        // Compress Student Image before uploading to Firestore
+        // Compress Student Image before sending
         function compressImage(file, maxWidth = 800, quality = 0.65) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -712,7 +720,6 @@
 
         window.handleStudentNotebookSubmit = async function(e) {
             e.preventDefault();
-            if (!currentUser) await authenticateUser();
 
             const name = document.getElementById('su-name-input').value.trim();
             const title = document.getElementById('su-title-input').value.trim() || "Дәптер тапсырмасы";
@@ -723,21 +730,27 @@
 
             try {
                 btn.disabled = true;
-                btn.innerText = "Сурет оңтайландырылып, жүктелуде...";
+                btn.innerText = "Сурет жүктелуде...";
 
                 const base64Img = await compressImage(fileInput.files[0]);
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
 
-                const notebooksRef = collection(db, 'artifacts', appId, 'public', 'data', 'notebooks');
-                await addDoc(notebooksRef, {
+                const payload = {
+                    id: 'task_' + Date.now(),
                     studentName: name,
                     grade: "9 А",
                     title: title,
                     imageUrl: base64Img,
                     timestamp: Date.now(),
                     timeStr: timeStr
-                });
+                };
+
+                // Broadcast image directly to teacher tab
+                bc.postMessage({ type: 'NOTEBOOK_UPLOAD', payload: payload });
+
+                window.state.taskSubmissions.unshift(payload);
+                saveData();
 
                 window.showToast("📸 Дәптер суреті мұғалімге жіберілді!");
                 fileInput.value = '';
@@ -751,60 +764,33 @@
             }
         };
 
-        window.triggerStudentBuzzerSubmit = async function() {
-            if (!currentUser) await authenticateUser();
+        window.triggerStudentBuzzerSubmit = function() {
             const teamId = parseInt(document.getElementById('s-team-select').value);
-            
-            try {
-                const buzzersRef = collection(db, 'artifacts', appId, 'public', 'data', 'buzzers');
-                const display = document.getElementById('master-timer-display');
-                const timeStr = display ? display.innerText : "00:00";
-                
-                await addDoc(buzzersRef, {
-                    teamId: teamId,
-                    timeStr: timeStr,
-                    timestamp: Date.now()
-                });
+            const display = document.getElementById('master-timer-display');
+            const timeStr = display ? display.innerText : "00:00";
 
-                window.showToast("🔔 Батырма басылды! Мұғалім тақтасы тоқтады.");
-            } catch (err) {
-                console.error("Buzzer error:", err);
-            }
+            bc.postMessage({ 
+                type: 'BUZZER_CLICK', 
+                payload: { teamId: teamId, timeStr: timeStr } 
+            });
+
+            window.handleBuzzer(teamId, timeStr);
+            window.showToast("🔔 Батырма басылды!");
         };
 
-        window.clearAttendanceCloud = async function() {
+        window.clearAttendanceCloud = function() {
             if (!confirm("Келген оқушылар тізімін тазалағыңыз келе ме?")) return;
-            try {
-                const attendanceRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
-                window.state.attendance = [];
-                window.renderAttendanceList();
-            } catch(e) { console.error(e); }
+            window.state.attendance = [];
+            saveData();
+            renderAttendanceList();
+            updateMonitorStats();
+            bc.postMessage({ type: 'CLEAR_ATTENDANCE' });
         };
-
-        // Start Firebase Auth on Load
-        authenticateUser();
     </script>
 
     <script>
-        // Global State Management
-        window.state = {
-            role: "teacher", // 'teacher' or 'student'
-            attendance: [],
-            teams: [
-                { id: 1, name: "1-топ: Митохондрия", score: 10, timeStopped: null, icon: "fa-bolt" },
-                { id: 2, name: "2-топ: ДНҚ", score: 15, timeStopped: null, icon: "fa-dna" },
-                { id: 3, name: "3-топ: Нейрон", score: 5, timeStopped: null, icon: "fa-brain" }
-            ],
-            taskSubmissions: [],
-            resources: [
-                { id: 1, title: "9-Сынып: Жасушаның Бөлінуі (Canva)", url: "https://www.canva.com", desc: "Сабақтың негізгі презентациясы" },
-                { id: 2, title: "Wordwall: ДНҚ және РНҚ интерактиві", url: "https://wordwall.net", desc: "Сәйкестендіру тапсырмасы" },
-                { id: 3, title: "Kahoot: Биологиялық Квиз", url: "https://kahoot.it", desc: "Топтық тест ойыны" }
-            ],
-            timer: { durationSeconds: 60, remainingMilliseconds: 60000, intervalId: null, isRunning: false, lastTime: 0 }
-        };
-
         window.addEventListener('DOMContentLoaded', () => {
+            loadLocalData();
             detectUrlParams();
             renderAttendanceList();
             renderTeams();
