@@ -32,10 +32,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- QR Code Generator JS Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Canvas Confetti for Victory Animations -->
+    <!-- Canvas Confetti -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
-    <!-- PeerJS for Real-Time Cross-Device WebRTC Syncing -->
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body {
@@ -43,12 +42,6 @@
         }
         .glow-emerald {
             box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
-        }
-        .buzzer-btn {
-            transition: all 0.1s ease;
-        }
-        .buzzer-btn:active {
-            transform: scale(0.95);
         }
         ::-webkit-scrollbar {
             width: 8px;
@@ -71,7 +64,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-2">
                 <!-- Logo & Title -->
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchRole('teacher')">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">
                         <i class="fa-solid font-bold fa-dna"></i>
                     </div>
@@ -126,19 +119,19 @@
                         <i class="fa-solid fa-hand-pointer mr-1"></i> Батырма
                     </button>
                     <button id="snav-res" onclick="switchStudentTab('res')" class="stab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">
-                        <i class="fa-solid fa-link mr-1"></i> Ресурстар
+                        <i class="fa-solid fa-link mr-1"></i> Материалдар
                     </button>
                 </nav>
 
-                <!-- Role Switcher & Live Connection Status -->
+                <!-- Role Switcher Button & Realtime Status -->
                 <div class="flex items-center space-x-2">
-                    <button onclick="toggleRole()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrow-rotate-left text-emerald-400"></i>
+                    <button onclick="toggleRole()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-mobile-screen-button text-emerald-400"></i>
                         <span id="role-switch-label" class="hidden sm:inline">Оқушы экранына өту</span>
                     </button>
-                    <div id="connection-status" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
-                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                        <span id="status-text" class="hidden md:inline">Желіге қосылуда...</span>
+                    <div id="connection-status" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span id="status-text" class="hidden md:inline">🔥 Cloud Live Белесенді</span>
                     </div>
                 </div>
             </div>
@@ -161,16 +154,16 @@
                         <div class="lg:col-span-8 space-y-4">
                             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
                                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                                Онлайн Тікелей Байланыс Синхроны Бродизді
+                                Онлайн Реал-тайм Деректер Базасы Белесенді
                             </div>
 
                             <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
                                 Интерактивті Білім Платформасы: <br/>
-                                <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">BioHub Live</span>
+                                <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">BioHub Cloud Synchronized</span>
                             </h1>
 
                             <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-                                Мұғалім мен оқушының телефондары арасындағы реал-тайм синхрондау жүйесі. QR-кодты тақтаға шығарыңыз, оқушылар сканерлеп, сабаққа қатысын белгілейді және суреттерін сіздің экраныңызға тікелей жібереді!
+                                QR-кодты интерактивті тақтаға шығарыңыз! Оқушылар кез келген смартфоннан немесе планшеттен тіркеледі, тапсырма суретін жібереді және топтық сайыста батырманы басады. Барлық әрекеттер лезде интерактивті тақтада көрінеді!
                             </p>
 
                             <div class="pt-2 flex flex-wrap gap-4 items-center">
@@ -181,18 +174,18 @@
                             </div>
                         </div>
 
-                        <!-- Dynamic Active Class & Lesson Control Panel -->
+                        <!-- Class Passport Control Panel -->
                         <div class="lg:col-span-4 bg-slate-950/80 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-6 shadow-2xl relative">
                             <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
                                 <h3 class="text-xs uppercase tracking-widest font-extrabold text-emerald-400 flex items-center gap-2">
                                     <i class="fa-solid fa-layer-group"></i> Сабақ Паспорты
                                 </h3>
-                                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Онлайн Бөлме</span>
+                                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Cloud Online</span>
                             </div>
 
                             <div class="space-y-4">
                                 <div>
-                                    <label class="text-slate-400 block text-[10px] uppercase font-semibold mb-1">Сыныпты таңдау:</label>
+                                    <label class="text-slate-400 block text-[10px] uppercase font-semibold mb-1">Белсенді Сынып:</label>
                                     <select id="active-session-class" onchange="changeActiveClass(this.value)" class="w-full bg-slate-900 border border-emerald-500/40 text-emerald-300 font-bold text-sm rounded-xl px-3 py-2 outline-none focus:border-emerald-400">
                                         <option value="ALL">Барлық сыныптар</option>
                                         <option value="9 А" selected>9 "А" сыныбы</option>
@@ -200,8 +193,6 @@
                                         <option value="9 Б">9 "Б" сыныбы</option>
                                         <option value="9 В">9 "В" сыныбы</option>
                                         <option value="9 Г">9 "Г" сыныбы</option>
-                                        <option value="9 Д">9 "Д" сыныбы</option>
-                                        <option value="9 Ғ">9 "Ғ" сыныбы</option>
                                     </select>
                                 </div>
 
@@ -209,15 +200,12 @@
                                     <div class="flex justify-between items-center pt-2 border-t border-slate-800">
                                         <div>
                                             <span class="text-slate-500 block text-[10px] uppercase font-semibold">Оқытушы</span>
-                                            <span id="pass-teacher" class="font-bold text-emerald-400">Уразалы Маржан Саматқызы</span>
+                                            <span class="font-bold text-emerald-400">Уразалы Маржан Саматқызы</span>
                                         </div>
-                                        <button onclick="editLessonPassport()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] rounded-lg border border-slate-700 transition">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
                                     </div>
                                     <div class="pt-2 border-t border-slate-800">
-                                        <span class="text-slate-500 block text-[10px] uppercase font-semibold">Бөлме коды (Room ID):</span>
-                                        <span id="display-room-id" class="font-mono text-xs font-bold text-cyan-400">Жүктелуде...</span>
+                                        <span class="text-slate-500 block text-[10px] uppercase font-semibold">Жүйелік статус:</span>
+                                        <span class="font-mono text-xs font-bold text-teal-400">Байланыс орнатылды (Онлайн)</span>
                                     </div>
                                 </div>
                             </div>
@@ -256,7 +244,7 @@
                             <i class="fa-solid fa-compass"></i>
                         </div>
                         <h3 class="font-bold text-white text-base group-hover:text-cyan-400 transition">4. Білім Кеңістігі</h3>
-                        <p class="text-xs text-slate-400 mt-1">Canva, Wordwall, Kahoot және дидактикалық материалдар.</p>
+                        <p class="text-xs text-slate-400 mt-1">Canva, Wordwall, Kahoot және дидактикалық сілтемелер.</p>
                     </div>
                 </div>
             </section>
@@ -269,7 +257,7 @@
                             <span class="text-emerald-400">BioCheck Live</span> — Тікелей Түгендеу Жүйесі
                         </h1>
                         <p class="mt-2 text-slate-300 text-sm leading-relaxed">
-                            Оқушылар мына QR-кодты өз телефондарымен сканерлеп, тіркеледі. Барлық келген оқушылар секунд ішінде осы оң жақтағы кестеде пайда болады!
+                            Оқушылар осы QR-кодты сканерлеп немесе сілтеме арқылы ашып, аты-жөнін жазады. Келген оқушылар лезде сіздің экраныңызда пайда болады!
                         </p>
                     </div>
                 </div>
@@ -279,18 +267,18 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg relative">
                         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-4">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                            Тақтаға шығарылатын белсенді QR-код
+                            Тақтаға шығарылатын QR-код
                         </div>
                         
                         <div id="qr-container" class="bg-white p-4 rounded-xl shadow-2xl border-4 border-emerald-500/30 flex items-center justify-center min-w-[200px] min-h-[200px]">
-                            <!-- Dynamic QR rendered here -->
+                            <!-- QR Code generated here -->
                         </div>
                         
                         <p class="mt-4 text-xs text-slate-400 max-w-xs">
-                            Оқушылар осы QR-кодты сканерлесе, олардың телефонында оңай тіркелу беті ашылады.
+                            Оқушыларға арналған осы тікелей сілтемені көшіріп таратуға да болады:
                         </p>
 
-                        <button onclick="copyStudentLink()" class="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold rounded-lg border border-slate-700 transition flex items-center gap-2">
+                        <button onclick="copyStudentLink()" class="mt-4 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center gap-2">
                             <i class="fa-solid fa-copy"></i>
                             <span>Сілтемені Көшіру</span>
                         </button>
@@ -310,11 +298,8 @@
                             </div>
 
                             <div class="flex items-center gap-2">
-                                <button onclick="clearAttendance()" class="px-3 py-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg font-medium transition">
+                                <button onclick="clearAttendanceCloud()" class="px-3 py-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg font-medium transition">
                                     <i class="fa-solid fa-trash-can mr-1"></i> Тазалау
-                                </button>
-                                <button onclick="exportAttendanceCSV()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg font-medium transition">
-                                    <i class="fa-solid fa-download mr-1"></i> CSV
                                 </button>
                             </div>
                         </div>
@@ -345,12 +330,6 @@
                                 <button onclick="setTimerDuration(60)" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30">60с</button>
                                 <button onclick="setTimerDuration(120)" class="px-3 py-1.5 text-xs font-bold rounded-lg text-slate-300 hover:bg-slate-800">120с</button>
                             </div>
-
-                            <div class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
-                                <button onclick="addTeam()" class="px-3 py-1.5 text-xs font-bold bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-lg">
-                                    <i class="fa-solid fa-plus"></i> Топ қосу
-                                </button>
-                            </div>
                         </div>
 
                         <div class="flex items-center gap-2">
@@ -376,38 +355,33 @@
                     </div>
                 </div>
 
-                <div id="teams-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div id="teams-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Populated dynamically -->
                 </div>
             </section>
 
-            <!-- TAB 3: BioTask (Notebook Photo Submissions) -->
+            <!-- TAB 3: BioTask Notebook Submissions -->
             <section id="tab-task" class="tab-content hidden space-y-6">
                 <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-2">
-                            <i class="fa-solid fa-trophy"></i> Жылдамдық & Ұқыптылық
+                            <i class="fa-solid fa-camera text-amber-400"></i> Жүктелген Дәптер Тапсырмалары
                         </div>
-                        <h2 class="text-2xl font-black text-white">BioTask — Жүктелген Дәптер Жұмыстары</h2>
-                        <p class="text-slate-300 text-xs sm:text-sm mt-1">Оқушылар өз телефондарынан жіберген дәптер жұмыстары осы жерде уақыт ретімен тізіледі!</p>
+                        <h2 class="text-2xl font-black text-white">BioTask — Оқушылар Жіберген Суреттер</h2>
+                        <p class="text-slate-300 text-xs sm:text-sm mt-1">Оқушылар өз телефондарынан түсіріп жіберген дәптер жұмыстары осы жерде реал-таймда көрінеді!</p>
                     </div>
                 </div>
 
                 <div id="notebook-feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Populated dynamically -->
+                    <!-- Dynamic notebooks list -->
                 </div>
             </section>
 
             <!-- TAB 4: Educational Resources -->
             <section id="tab-space" class="tab-content hidden space-y-6">
-                <div class="bg-gradient-to-r from-cyan-950/50 via-slate-900 to-slate-900 border border-cyan-500/30 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-2xl font-black text-white">Білім Кеңістігі & Ресурстар</h2>
-                        <p class="text-slate-300 text-xs sm:text-sm mt-1">Оқушыларға арналған Canva слайдтары, Wordwall ойындары мен Kahoot сілтемелері.</p>
-                    </div>
-                    <button onclick="toggleAddResourceModal()" class="px-5 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black rounded-xl text-sm shadow-lg">
-                        + Жаңа Сілтеме Қосу
-                    </button>
+                <div class="bg-gradient-to-r from-cyan-950/50 via-slate-900 to-slate-900 border border-cyan-500/30 rounded-2xl p-6 shadow-xl">
+                    <h2 class="text-2xl font-black text-white">Білім Кеңістігі & Ресурстар</h2>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-1">Оқушыларға арналған Canva слайдтары, Wordwall және Kahoot интерактивті материалдары.</p>
                 </div>
 
                 <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -432,41 +406,41 @@
                             <i class="fa-solid fa-award"></i>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-400 font-medium">Белсенді топтар</p>
-                            <p id="stat-active-teams" class="text-2xl font-black text-white">3</p>
+                            <p class="text-xs text-slate-400 font-medium">Көшбасшы Топ</p>
+                            <p id="stat-leader-team" class="text-xl font-black text-amber-300">1-топ: Митохондрия</p>
                         </div>
                     </div>
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-bolt"></i>
+                            <i class="fa-solid fa-image"></i>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-400 font-medium">Көшбасшы Топ</p>
-                            <p id="stat-leader-team" class="text-xl font-black text-amber-300">--</p>
+                            <p class="text-xs text-slate-400 font-medium">Жүктелген суреттер</p>
+                            <p id="stat-total-images" class="text-2xl font-black text-white">0</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-clock-rotate-left text-emerald-400 mr-2"></i>Сабақ Журналы (Тікелей эфир хабарламалары)</h3>
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-clock-rotate-left text-emerald-400 mr-2"></i>Сабақ Журналы (Live Logs)</h3>
                     <div id="activity-log" class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono space-y-2 max-h-[250px] overflow-y-auto">
-                        <p class="text-slate-500">[14:30] Жүйе дайын. Мұғалім бөлмесі ашылды.</p>
+                        <p class="text-slate-500">[14:30] Жүйе дайын. Firebase Реал-тайм байланысы іске қосылды.</p>
                     </div>
                 </div>
             </section>
 
         </div>
 
-        <!-- ================= STUDENT VIEW (ONLY ACCESSIBLE TO STUDENTS) ================= -->
+        <!-- ================= STUDENT VIEW (FOR MOBILE PHONES) ================= -->
         <div id="student-view-container" class="hidden max-w-lg mx-auto space-y-6">
             
             <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 border border-emerald-500/30 rounded-2xl p-5 text-center shadow-xl">
                 <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
                     🎓 Оқушы Кабинеті
                 </span>
-                <h2 class="text-xl font-extrabold text-white mt-2">BioHub — Сабаққа Қосылу</h2>
+                <h2 class="text-xl font-extrabold text-white mt-2">BioHub — Онлайн Сабақ</h2>
                 <p id="student-status-indicator" class="text-xs text-emerald-400 mt-1 font-semibold">
-                    <i class="fa-solid fa-wifi mr-1"></i> Мұғалім экранына онлайн қосылдыңыз!
+                    <i class="fa-solid fa-wifi mr-1"></i> Мұғалім тақтасымен реал-тайм байланыста!
                 </p>
             </div>
 
@@ -475,9 +449,9 @@
                 <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
                     <i class="fa-solid fa-user-check text-emerald-400"></i> Сабаққа Тіркелу
                 </h3>
-                <p class="text-xs text-slate-400 mb-4">Аты-жөніңізді енгізіп, сабақта бар екеніңізді белгілеңіз</p>
+                <p class="text-xs text-slate-400 mb-4">Аты-жөніңізді енгізіп, «Сабаққа қатыстым» батырмасын басыңыз</p>
 
-                <form onsubmit="handleStudentFormCheckin(event)" class="space-y-4">
+                <form onsubmit="handleStudentCheckinSubmit(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1">Сыныбыңыз</label>
                         <select id="s-class-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-emerald-300 font-bold">
@@ -486,19 +460,17 @@
                             <option value="9 Б">9 "Б" сыныбы</option>
                             <option value="9 В">9 "В" сыныбы</option>
                             <option value="9 Г">9 "Г" сыныбы</option>
-                            <option value="9 Д">9 "Д" сыныбы</option>
-                            <option value="9 Ғ">9 "Ғ" сыныбы</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Аты-жөніңіз (Аты тегі)</label>
-                        <input type="text" id="s-name-input" required placeholder="Мысалы: Диана Ермекова" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-emerald-500">
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Аты-жөніңіз (Аты және Тегі)</label>
+                        <input type="text" id="s-name-input" required placeholder="Мысалы: Диана Ермекова" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 outline-none">
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center justify-center gap-2">
+                    <button type="submit" id="btn-checkin-submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
                         <i class="fa-solid fa-check"></i>
-                        <span>Мұғалімге жіберу (Қатыстым)</span>
+                        <span>Мұғалімге Жіберу (Сабақтамын)</span>
                     </button>
                 </form>
             </div>
@@ -508,27 +480,27 @@
                 <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
                     <i class="fa-solid fa-camera text-amber-400"></i> Дәптер Тапсырмасын Жүктеу
                 </h3>
-                <p class="text-xs text-slate-400 mb-4">Орындалған дәптер жұмысын фотоға түсіріп, мұғалімге жіберіңіз</p>
+                <p class="text-xs text-slate-400 mb-4">Орындалған дәптер жұмысын фотоға түсіріп, мұғалім тақтасына жіберіңіз</p>
 
-                <form onsubmit="handleStudentFormUpload(event)" class="space-y-4">
+                <form onsubmit="handleStudentNotebookSubmit(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1">Аты-жөніңіз</label>
-                        <input type="text" id="su-name-input" required placeholder="Атыңыз" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white">
+                        <input type="text" id="su-name-input" required placeholder="Мысалы: Әлішер Аманжол" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-amber-500 outline-none">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1">Тапсырма Тақырыбы</label>
-                        <input type="text" id="su-title-input" placeholder="Мысалы: Митоз фазалары" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white">
+                        <input type="text" id="su-title-input" placeholder="Мысалы: Митоз фазалары" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-amber-500 outline-none">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Дәптер Суретін Таңдау</label>
-                        <input type="file" id="su-file-input" accept="image/*" required class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500/20 file:text-amber-400">
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Дәптер Суретін Түсіру / Таңдау</label>
+                        <input type="file" id="su-file-input" accept="image/*" required class="w-full text-xs text-slate-400 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500/20 file:text-amber-400 hover:file:bg-amber-500/30">
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center justify-center gap-2">
+                    <button type="submit" id="btn-upload-submit" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
                         <i class="fa-solid fa-paper-plane"></i>
-                        <span>Мұғалім экранына жіберу</span>
+                        <span>Тақтаға Жіберу (Жүктеу)</span>
                     </button>
                 </form>
             </div>
@@ -536,17 +508,18 @@
             <!-- Student Sub-Tab 3: Group Buzzer -->
             <div id="stab-buzzer" class="student-tab-content hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl text-center">
                 <h3 class="text-lg font-bold text-white mb-2">🔔 Топтық Батырма (Buzzer)</h3>
-                <p class="text-xs text-slate-400 mb-6">Топпен жауап дайын болғанда осы батырманы басыңыз!</p>
+                <p class="text-xs text-slate-400 mb-6">Топпен жауап дайын болғанда осы үлкен батырманы басыңыз!</p>
 
-                <div class="mb-4">
-                    <select id="s-team-select" class="bg-slate-950 border border-slate-800 text-emerald-300 text-sm font-bold rounded-xl px-4 py-2">
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-300 mb-2">Тобыңызды таңдаңыз:</label>
+                    <select id="s-team-select" class="bg-slate-950 border border-slate-800 text-emerald-300 text-sm font-bold rounded-xl px-4 py-3 w-full">
                         <option value="1">1-топ: Митохондрия</option>
                         <option value="2">2-топ: ДНҚ</option>
                         <option value="3">3-топ: Нейрон</option>
                     </select>
                 </div>
 
-                <button onclick="triggerStudentBuzzer()" class="w-48 h-48 rounded-full bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-slate-950 font-black text-xl shadow-2xl shadow-emerald-500/40 border-8 border-slate-950 active:scale-90 transition mx-auto flex flex-col items-center justify-center gap-2">
+                <button onclick="triggerStudentBuzzerSubmit()" class="w-48 h-48 rounded-full bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-slate-950 font-black text-xl shadow-2xl shadow-emerald-500/40 border-8 border-slate-950 active:scale-90 transition mx-auto flex flex-col items-center justify-center gap-2">
                     <i class="fa-solid fa-hand-pointer text-4xl"></i>
                     <span>ЖАУАП ДАЙЫН!</span>
                 </button>
@@ -565,26 +538,258 @@
     </main>
 
     <!-- Modal: Image Viewer -->
-    <div id="image-viewer-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden" onclick="toggleImageViewer()">
+    <div id="image-viewer-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden" onclick="closeImageViewer()">
         <div class="relative max-w-4xl w-full flex flex-col items-center">
             <img id="viewer-img-target" src="" class="max-h-[80vh] rounded-2xl border-2 border-emerald-500/50 shadow-2xl object-contain">
             <p id="viewer-img-caption" class="text-white text-sm font-bold mt-3 bg-slate-900 px-4 py-2 rounded-xl border border-slate-800"></p>
         </div>
     </div>
 
+    <!-- Notification Toast -->
+    <div id="toast-notif" class="fixed bottom-5 right-5 bg-emerald-600 text-slate-950 font-extrabold px-5 py-3 rounded-2xl shadow-2xl border border-emerald-300 hidden transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-lg"></i>
+        <span id="toast-msg">Сәтті орындалды!</span>
+    </div>
+
+    <!-- Firebase Standard Integration Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'biohub-class-v1';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyDemoDummyKeyForBioHubApp123456",
+                authDomain: "biohub-demo.firebaseapp.com",
+                projectId: "biohub-demo",
+                storageBucket: "biohub-demo.appspot.com",
+                messagingSenderId: "1234567890",
+                appId: "1:1234567890:web:abcdef123456"
+            };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // Ensure Auth precedes any Database Operation (Rule 3)
+        async function authenticateUser() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = cred.user;
+                } else {
+                    const cred = await signInAnonymously(auth);
+                    currentUser = cred.user;
+                }
+                console.log("Firebase Auth success, UID:", currentUser.uid);
+                setupRealtimeListeners();
+            } catch (err) {
+                console.warn("Auth initialization warning, retrying anonymous auth...", err);
+                try {
+                    const cred = await signInAnonymously(auth);
+                    currentUser = cred.user;
+                    setupRealtimeListeners();
+                } catch(e) {
+                    console.error("Auth completely failed", e);
+                }
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!currentUser) return;
+
+            // Strict Path Compliance (Rule 1)
+            const attendanceRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
+            const notebooksRef = collection(db, 'artifacts', appId, 'public', 'data', 'notebooks');
+            const buzzersRef = collection(db, 'artifacts', appId, 'public', 'data', 'buzzers');
+
+            // 1. Attendance Listener
+            onSnapshot(attendanceRef, (snapshot) => {
+                const list = [];
+                snapshot.forEach(docSnap => {
+                    list.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                // Sort by time in memory (Rule 2)
+                list.sort((a, b) => b.timestamp - a.timestamp);
+                window.state.attendance = list;
+                window.renderAttendanceList();
+                window.updateMonitorStats();
+            }, (err) => console.warn("Attendance listener warning:", err));
+
+            // 2. Notebook Submissions Listener
+            onSnapshot(notebooksRef, (snapshot) => {
+                const list = [];
+                snapshot.forEach(docSnap => {
+                    list.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                list.sort((a, b) => b.timestamp - a.timestamp);
+                window.state.taskSubmissions = list;
+                window.renderNotebookFeed();
+                window.updateMonitorStats();
+            }, (err) => console.warn("Notebooks listener warning:", err));
+
+            // 3. Buzzer Listener
+            onSnapshot(buzzersRef, (snapshot) => {
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data && data.teamId) {
+                        window.handleBuzzer(data.teamId, data.timeStr);
+                    }
+                });
+            }, (err) => console.warn("Buzzer listener warning:", err));
+        }
+
+        // Global functions for HTML Form Submissions
+        window.handleStudentCheckinSubmit = async function(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                await authenticateUser();
+            }
+
+            const name = document.getElementById('s-name-input').value.trim();
+            const grade = document.getElementById('s-class-input').value;
+            const btn = document.getElementById('btn-checkin-submit');
+
+            if (!name) return;
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "Жіберілуде...";
+
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
+
+                const attendanceRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
+                await addDoc(attendanceRef, {
+                    name: name,
+                    grade: grade,
+                    time: timeStr,
+                    timestamp: Date.now()
+                });
+
+                window.showToast("✅ Мұғалім экранына сәтті тіркелдіңіз!");
+                document.getElementById('s-name-input').value = '';
+            } catch (err) {
+                console.error("Checkin error:", err);
+                alert("Қате орын алды, қайта байқап көріңіз!");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Мұғалімге Жіберу (Сабақтамын)</span>`;
+            }
+        };
+
+        // Compress Student Image before uploading to Firestore
+        function compressImage(file, maxWidth = 800, quality = 0.65) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.handleStudentNotebookSubmit = async function(e) {
+            e.preventDefault();
+            if (!currentUser) await authenticateUser();
+
+            const name = document.getElementById('su-name-input').value.trim();
+            const title = document.getElementById('su-title-input').value.trim() || "Дәптер тапсырмасы";
+            const fileInput = document.getElementById('su-file-input');
+            const btn = document.getElementById('btn-upload-submit');
+
+            if (!name || !fileInput.files[0]) return;
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "Сурет оңтайландырылып, жүктелуде...";
+
+                const base64Img = await compressImage(fileInput.files[0]);
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
+
+                const notebooksRef = collection(db, 'artifacts', appId, 'public', 'data', 'notebooks');
+                await addDoc(notebooksRef, {
+                    studentName: name,
+                    grade: "9 А",
+                    title: title,
+                    imageUrl: base64Img,
+                    timestamp: Date.now(),
+                    timeStr: timeStr
+                });
+
+                window.showToast("📸 Дәптер суреті мұғалімге жіберілді!");
+                fileInput.value = '';
+                document.getElementById('su-title-input').value = '';
+            } catch (err) {
+                console.error("Image upload error:", err);
+                alert("Суретті жүктеу кезінде қате орын алды.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Тақтаға Жіберу (Жүктеу)</span>`;
+            }
+        };
+
+        window.triggerStudentBuzzerSubmit = async function() {
+            if (!currentUser) await authenticateUser();
+            const teamId = parseInt(document.getElementById('s-team-select').value);
+            
+            try {
+                const buzzersRef = collection(db, 'artifacts', appId, 'public', 'data', 'buzzers');
+                const display = document.getElementById('master-timer-display');
+                const timeStr = display ? display.innerText : "00:00";
+                
+                await addDoc(buzzersRef, {
+                    teamId: teamId,
+                    timeStr: timeStr,
+                    timestamp: Date.now()
+                });
+
+                window.showToast("🔔 Батырма басылды! Мұғалім тақтасы тоқтады.");
+            } catch (err) {
+                console.error("Buzzer error:", err);
+            }
+        };
+
+        window.clearAttendanceCloud = async function() {
+            if (!confirm("Келген оқушылар тізімін тазалағыңыз келе ме?")) return;
+            try {
+                const attendanceRef = collection(db, 'artifacts', appId, 'public', 'data', 'attendance');
+                window.state.attendance = [];
+                window.renderAttendanceList();
+            } catch(e) { console.error(e); }
+        };
+
+        // Start Firebase Auth on Load
+        authenticateUser();
+    </script>
+
     <script>
-        // Global App State
-        let state = {
+        // Global State Management
+        window.state = {
             role: "teacher", // 'teacher' or 'student'
-            roomId: null,
-            peer: null,
-            connections: [],
-            broadcastChannel: null, // Fallback for restricted WebSockets / Canvas environment
-            activeClass: "ALL",
-            attendance: [
-                { id: 1, name: "Әлішер Аманжол", grade: "9 А", time: "14:28", status: "present" },
-                { id: 2, name: "Диана Ермекова", grade: "9 Ә", time: "14:29", status: "present" }
-            ],
+            attendance: [],
             teams: [
                 { id: 1, name: "1-топ: Митохондрия", score: 10, timeStopped: null, icon: "fa-bolt" },
                 { id: 2, name: "2-топ: ДНҚ", score: 15, timeStopped: null, icon: "fa-dna" },
@@ -592,215 +797,73 @@
             ],
             taskSubmissions: [],
             resources: [
-                { id: 1, title: "9-Сынып: Жасушаның Бөлінуі (Canva Слайд)", url: "https://www.canva.com", desc: "Сабақтың негізгі презентациясы" },
-                { id: 2, title: "Wordwall: ДНҚ және РНҚ айырмашылығы", url: "https://wordwall.net", desc: "Интерактивті сәйкестендіру ойыны" }
+                { id: 1, title: "9-Сынып: Жасушаның Бөлінуі (Canva)", url: "https://www.canva.com", desc: "Сабақтың негізгі презентациясы" },
+                { id: 2, title: "Wordwall: ДНҚ және РНҚ интерактиві", url: "https://wordwall.net", desc: "Сәйкестендіру тапсырмасы" },
+                { id: 3, title: "Kahoot: Биологиялық Квиз", url: "https://kahoot.it", desc: "Топтық тест ойыны" }
             ],
             timer: { durationSeconds: 60, remainingMilliseconds: 60000, intervalId: null, isRunning: false, lastTime: 0 }
         };
 
         window.addEventListener('DOMContentLoaded', () => {
             detectUrlParams();
-            initPeerConnection();
             renderAttendanceList();
             renderTeams();
             renderNotebookFeed();
             renderResources();
+            renderStudentResources();
             updateMasterTimerDisplay();
             updateMonitorStats();
         });
 
-        // URL Parameters Detection for Student Auto-Role
-        // WebRTC Real-Time Sync Logic via PeerJS with BroadcastChannel Fallback
-        function initPeerConnection() {
-            const statusText = document.getElementById('status-text');
-            const displayRoom = document.getElementById('display-room-id');
+        function detectUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('role') === 'student') {
+                switchRole('student');
+            }
+        }
 
-            // Set up fallback BroadcastChannel for Canvas / WebSocket restricted environments
-            const roomIdForChannel = state.roomId || 'biohub-local-room';
-            state.roomId = state.roomId || ('biohub-' + Math.floor(1000 + Math.random() * 9000));
-            if (displayRoom) displayRoom.innerText = state.roomId;
+        function toggleRole() {
+            if (window.state.role === 'teacher') {
+                switchRole('student');
+            } else {
+                switchRole('teacher');
+            }
+        }
 
-            try {
-                if ('BroadcastChannel' in window) {
-                    state.broadcastChannel = new BroadcastChannel('biohub_sync_channel');
-                    state.broadcastChannel.onmessage = (event) => {
-                        if (event.data) {
-                            handleIncomingData(event.data);
-                        }
-                    };
+        function switchRole(roleName) {
+            window.state.role = roleName;
+            const tContainer = document.getElementById('teacher-view-container');
+            const sContainer = document.getElementById('student-view-container');
+            const tNav = document.getElementById('teacher-nav');
+            const sNav = document.getElementById('student-nav');
+            const badge = document.getElementById('role-badge');
+            const label = document.getElementById('role-switch-label');
+
+            if (roleName === 'student') {
+                tContainer.classList.add('hidden');
+                sContainer.classList.remove('hidden');
+                tNav.classList.add('hidden');
+                sNav.classList.remove('hidden');
+                if (badge) {
+                    badge.innerText = "🎓 Оқушы";
+                    badge.className = "text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full font-bold";
                 }
-            } catch (bcError) {
-                console.warn('BroadcastChannel initialization fallback error:', bcError);
-            }
-
-            // Attempt PeerJS WebRTC initialization safely
-            try {
-                if (state.role === 'teacher') {
-                    state.peer = new Peer(state.roomId);
-
-                    state.peer.on('open', (id) => {
-                        console.log('Teacher Peer Room created:', id);
-                        if (statusText) statusText.innerText = "Оқушыларды күтуде (Онлайн WebRTC)";
-                        renderQR();
-                    });
-
-                    state.peer.on('connection', (conn) => {
-                        state.connections.push(conn);
-                        if (statusText) statusText.innerText = `Байланысты: ${state.connections.length} оқушы`;
-
-                        conn.on('data', (data) => {
-                            handleIncomingData(data);
-                        });
-                    });
-
-                    state.peer.on('error', (err) => {
-                        console.warn('PeerJS WebSockets restricted, falling back to BroadcastChannel:', err);
-                        if (statusText) statusText.innerText = "Жергілікті синхрон режимі (Broadcast)";
-                    });
-
-                } else {
-                    // Student connects to Teacher Room
-                    state.peer = new Peer();
-                    state.peer.on('open', () => {
-                        if (state.roomId) {
-                            const conn = state.peer.connect(state.roomId);
-                            conn.on('open', () => {
-                                state.connections.push(conn);
-                                if (statusText) statusText.innerText = "Мұғалімге онлайн қосылды";
-                                logActivity("Мұғалім экранына сәтті қосылдыңыз!");
-                            });
-
-                            conn.on('error', (err) => {
-                                console.warn('Student connection error:', err);
-                            });
-                        }
-                    });
-
-                    state.peer.on('error', (err) => {
-                        console.warn('Student PeerJS error, using BroadcastChannel:', err);
-                        if (statusText) statusText.innerText = "Жергілікті режим (Broadcast)";
-                    });
+                if (label) label.innerText = "Мұғалім экранына өту";
+                switchStudentTab('checkin');
+            } else {
+                sContainer.classList.add('hidden');
+                tContainer.classList.remove('hidden');
+                sNav.classList.add('hidden');
+                tNav.classList.remove('hidden');
+                if (badge) {
+                    badge.innerText = "👨‍🏫 Мұғалім";
+                    badge.className = "text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold";
                 }
-            } catch (err) {
-                console.warn('WebSocket / PeerJS security blocked by environment. Using BroadcastChannel fallback.', err);
-                if (statusText) statusText.innerText = "Жергілікті бродкаст режимі";
+                if (label) label.innerText = "Оқушы экранына өту";
+                switchTab('home');
             }
         }
 
-        function handleIncomingData(payload) {
-            if (!payload || !payload.type) return;
-
-            if (payload.type === 'CHECKIN') {
-                const data = payload.data;
-                const existing = state.attendance.find(a => a.name.toLowerCase() === data.name.toLowerCase());
-                if (!existing) {
-                    state.attendance.unshift(data);
-                    renderAttendanceList();
-                    updateMonitorStats();
-                    safeConfetti({ particleCount: 30, spread: 60 });
-                    logActivity(`✅ ЖАҢА ОҚУШЫ ТІРКЕЛДІ: ${data.name} (${data.grade})`);
-                }
-            } else if (payload.type === 'TASK') {
-                state.taskSubmissions.unshift(payload.data);
-                renderNotebookFeed();
-                safeConfetti({ particleCount: 50, spread: 80 });
-                logActivity(`📸 ДӘПТЕР ЖҮКТЕЛДІ: ${payload.data.studentName} (${payload.data.grade})`);
-            } else if (payload.type === 'BUZZER') {
-                handleBuzzer(payload.teamId);
-            }
-        }
-
-        function sendToTeacher(payload) {
-            let sentViaPeer = false;
-
-            // 1. Try sending via WebRTC connections
-            if (state.connections.length > 0) {
-                state.connections.forEach(conn => {
-                    try {
-                        conn.send(payload);
-                        sentViaPeer = true;
-                    } catch (e) {
-                        console.warn('Failed to send via PeerJS connection:', e);
-                    }
-                });
-            }
-
-            // 2. Try sending via BroadcastChannel (works cross-tab on same domain/origin inside Canvas/sandboxes)
-            if (state.broadcastChannel) {
-                try {
-                    state.broadcastChannel.postMessage(payload);
-                } catch (e) {
-                    console.warn('Failed to send via BroadcastChannel:', e);
-                }
-            }
-
-            // 3. Fallback for single-tab testing or when WebSockets are blocked
-            if (!sentViaPeer) {
-                handleIncomingData(payload);
-            }
-        }
-
-        // Student Actions
-        function handleStudentFormCheckin(e) {
-            e.preventDefault();
-            const name = document.getElementById('s-name-input').value.trim();
-            const grade = document.getElementById('s-class-input').value;
-            if (!name) return;
-
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
-
-            const payload = {
-                type: 'CHECKIN',
-                data: { id: Date.now(), name: name, grade: grade, time: timeStr, status: 'present' }
-            };
-
-            sendToTeacher(payload);
-            alert("✅ Тіркелгеніңіз мұғалім экранына жіберілді!");
-            document.getElementById('s-name-input').value = '';
-        }
-
-        function handleStudentFormUpload(e) {
-            e.preventDefault();
-            const name = document.getElementById('su-name-input').value.trim();
-            const title = document.getElementById('su-title-input').value.trim() || "Дәптер тапсырмасы";
-            const fileInput = document.getElementById('su-file-input');
-
-            if (!name || !fileInput.files[0]) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
-
-                const payload = {
-                    type: 'TASK',
-                    data: {
-                        id: Date.now(),
-                        studentName: name,
-                        grade: "9 А",
-                        title: title,
-                        imageUrl: evt.target.result,
-                        timestamp: Date.now(),
-                        timeStr: timeStr
-                    }
-                };
-
-                sendToTeacher(payload);
-                alert("📸 Дәптер суреті мұғалім экранына сәтті жүктелді!");
-                document.getElementById('su-name-input').value = '';
-                fileInput.value = '';
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        }
-
-        function triggerStudentBuzzer() {
-            const teamId = parseInt(document.getElementById('s-team-select').value);
-            sendToTeacher({ type: 'BUZZER', teamId: teamId });
-            alert("🔔 Мұғалім экранындағы таймер тоқтатылды!");
-        }
-
-        // Navigation Switchers
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             const selected = document.getElementById(`tab-${tabId}`);
@@ -829,20 +892,19 @@
             if (active) active.classList.add('bg-emerald-600', 'text-white');
         }
 
-        // QR Code Generator
         function renderQR() {
             const container = document.getElementById('qr-container');
             if (!container) return;
             container.innerHTML = '';
 
-            const currentBase = window.location.origin + window.location.pathname;
-            const fullStudentUrl = `${currentBase}?role=student&room=${state.roomId}`;
+            const currentBase = window.location.href.split('?')[0];
+            const fullStudentUrl = `${currentBase}?role=student`;
 
             if (typeof QRCode !== 'undefined') {
                 new QRCode(container, {
                     text: fullStudentUrl,
-                    width: 180,
-                    height: 180,
+                    width: 190,
+                    height: 190,
                     colorDark: "#0a0f0d",
                     colorLight: "#ffffff"
                 });
@@ -850,35 +912,34 @@
         }
 
         function copyStudentLink() {
-            const currentBase = window.location.origin + window.location.pathname;
-            const fullStudentUrl = `${currentBase}?role=student&room=${state.roomId}`;
+            const currentBase = window.location.href.split('?')[0];
+            const fullStudentUrl = `${currentBase}?role=student`;
             navigator.clipboard.writeText(fullStudentUrl).then(() => {
-                alert("Оқушыларға арналған сілтеме көшірілді!\n" + fullStudentUrl);
+                showToast("Оқушылар сілтемесі көшірілді!");
             });
         }
 
-        // Render Helpers
         function renderAttendanceList() {
             const container = document.getElementById('attendance-list');
             const countEl = document.getElementById('attendance-count');
             if (!container) return;
 
-            if(countEl) countEl.innerText = `Келгендер: ${state.attendance.length} оқушы`;
+            if (countEl) countEl.innerText = `Келгендер: ${window.state.attendance.length} оқушы`;
 
-            if (state.attendance.length === 0) {
+            if (window.state.attendance.length === 0) {
                 container.innerHTML = `<p class="text-center py-6 text-slate-500 text-xs">Әлі оқушылар тіркелген жоқ. QR-кодты сканерлеуді өтініңіз.</p>`;
                 return;
             }
 
-            container.innerHTML = state.attendance.map(a => `
+            container.innerHTML = window.state.attendance.map(a => `
                 <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
                             <i class="fa-solid fa-user-check"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-slate-200 text-xs sm:text-sm">${a.name} (${a.grade})</h4>
-                            <span class="text-[10px] text-slate-400">Тіркелген уақыты: ${a.time}</span>
+                            <h4 class="font-bold text-slate-200 text-xs sm:text-sm">${a.name} (${a.grade || '9 А'})</h4>
+                            <span class="text-[10px] text-slate-400">Уақыты: ${a.time || '14:30'}</span>
                         </div>
                     </div>
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -892,7 +953,7 @@
             const container = document.getElementById('teams-container');
             if (!container) return;
 
-            container.innerHTML = state.teams.map(t => `
+            container.innerHTML = window.state.teams.map(t => `
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between space-y-4">
                     <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                         <div class="flex items-center gap-2">
@@ -914,18 +975,19 @@
             `).join('');
         }
 
-        function handleBuzzer(teamId) {
-            const team = state.teams.find(t => t.id === teamId);
+        function handleBuzzer(teamId, customTime) {
+            const team = window.state.teams.find(t => t.id === teamId);
             if (!team || team.timeStopped !== null) return;
             const display = document.getElementById('master-timer-display');
-            team.timeStopped = display ? display.innerText : "00:00";
+            team.timeStopped = customTime || (display ? display.innerText : "00:00");
+            pauseGlobalTimer();
             renderTeams();
-            safeConfetti({ particleCount: 50 });
+            if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 70 });
             logActivity(`🔔 ${team.name} батырманы басты! Уақыты: ${team.timeStopped}`);
         }
 
         function updateTeamScore(teamId, delta) {
-            const team = state.teams.find(t => t.id === teamId);
+            const team = window.state.teams.find(t => t.id === teamId);
             if (team) {
                 team.score += delta;
                 renderTeams();
@@ -937,18 +999,18 @@
             const container = document.getElementById('notebook-feed-container');
             if (!container) return;
 
-            if (state.taskSubmissions.length === 0) {
+            if (window.state.taskSubmissions.length === 0) {
                 container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 bg-slate-900 border border-slate-800 rounded-2xl">Әлі оқушылар сурет жүктеген жоқ.</div>`;
                 return;
             }
 
-            container.innerHTML = state.taskSubmissions.map(s => `
+            container.innerHTML = window.state.taskSubmissions.map(s => `
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <img src="${s.imageUrl}" onclick="openImageViewer('${s.imageUrl}', '${s.studentName}')" class="w-full h-48 object-cover cursor-pointer hover:scale-105 transition">
                     <div class="p-4">
-                        <span class="text-xs text-amber-400 font-bold">${s.grade} • ${s.timeStr}</span>
+                        <span class="text-xs text-amber-400 font-bold">${s.grade || '9 А'} • ${s.timeStr || ''}</span>
                         <h4 class="font-bold text-white text-base mt-1">${s.studentName}</h4>
-                        <p class="text-xs text-slate-300">${s.title}</p>
+                        <p class="text-xs text-slate-300">${s.title || 'Дәптер тапсырмасы'}</p>
                     </div>
                 </div>
             `).join('');
@@ -957,13 +1019,13 @@
         function renderResources() {
             const container = document.getElementById('resources-grid');
             if (!container) return;
-            container.innerHTML = state.resources.map(r => `
+            container.innerHTML = window.state.resources.map(r => `
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
                     <div>
                         <h4 class="font-bold text-white text-base mb-1">${r.title}</h4>
                         <p class="text-xs text-slate-400">${r.desc}</p>
                     </div>
-                    <a href="${r.url}" target="_blank" class="mt-4 py-2 bg-slate-950 text-cyan-300 text-center rounded-xl text-xs font-bold">Сілтемені Ашу</a>
+                    <a href="${r.url}" target="_blank" class="mt-4 py-2 bg-slate-950 text-cyan-300 text-center rounded-xl text-xs font-bold border border-slate-800 hover:border-cyan-500/40">Сілтемені Ашу</a>
                 </div>
             `).join('');
         }
@@ -971,7 +1033,7 @@
         function renderStudentResources() {
             const container = document.getElementById('student-resources-grid');
             if (!container) return;
-            container.innerHTML = state.resources.map(r => `
+            container.innerHTML = window.state.resources.map(r => `
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
                     <div>
                         <h4 class="font-bold text-white text-sm">${r.title}</h4>
@@ -984,15 +1046,15 @@
 
         // Timer Functions
         function startGlobalTimer() {
-            if (state.timer.isRunning) return;
-            state.timer.isRunning = true;
-            state.timer.lastTime = Date.now();
-            state.timer.intervalId = setInterval(() => {
+            if (window.state.timer.isRunning) return;
+            window.state.timer.isRunning = true;
+            window.state.timer.lastTime = Date.now();
+            window.state.timer.intervalId = setInterval(() => {
                 const now = Date.now();
-                state.timer.remainingMilliseconds -= (now - state.timer.lastTime);
-                state.timer.lastTime = now;
-                if (state.timer.remainingMilliseconds <= 0) {
-                    state.timer.remainingMilliseconds = 0;
+                window.state.timer.remainingMilliseconds -= (now - window.state.timer.lastTime);
+                window.state.timer.lastTime = now;
+                if (window.state.timer.remainingMilliseconds <= 0) {
+                    window.state.timer.remainingMilliseconds = 0;
                     pauseGlobalTimer();
                 }
                 updateMasterTimerDisplay();
@@ -1000,14 +1062,14 @@
         }
 
         function pauseGlobalTimer() {
-            state.timer.isRunning = false;
-            if (state.timer.intervalId) clearInterval(state.timer.intervalId);
+            window.state.timer.isRunning = false;
+            if (window.state.timer.intervalId) clearInterval(window.state.timer.intervalId);
         }
 
         function resetGlobalTimer() {
             pauseGlobalTimer();
-            state.timer.remainingMilliseconds = state.timer.durationSeconds * 1000;
-            state.teams.forEach(t => t.timeStopped = null);
+            window.state.timer.remainingMilliseconds = window.state.timer.durationSeconds * 1000;
+            window.state.teams.forEach(t => t.timeStopped = null);
             renderTeams();
             updateMasterTimerDisplay();
         }
@@ -1015,51 +1077,54 @@
         function updateMasterTimerDisplay() {
             const display = document.getElementById('master-timer-display');
             if (!display) return;
-            const totalSec = Math.floor(state.timer.remainingMilliseconds / 1000);
+            const totalSec = Math.floor(window.state.timer.remainingMilliseconds / 1000);
             const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
             const secs = String(totalSec % 60).padStart(2, '0');
             display.innerHTML = `${mins}:${secs}.<span class="text-3xl text-emerald-600">00</span>`;
         }
 
-        function setTimerDuration(s) { state.timer.durationSeconds = s; resetGlobalTimer(); }
-        function addTeam() {
-            state.teams.push({ id: Date.now(), name: `${state.teams.length + 1}-топ`, score: 0, timeStopped: null, icon: "fa-bolt" });
-            renderTeams();
+        function setTimerDuration(s) {
+            window.state.timer.durationSeconds = s;
+            resetGlobalTimer();
         }
 
         function updateMonitorStats() {
             const totalStudentsEl = document.getElementById('stat-total-students');
-            const activeTeamsEl = document.getElementById('stat-active-teams');
-            if(totalStudentsEl) totalStudentsEl.innerText = state.attendance.length;
-            if(activeTeamsEl) activeTeamsEl.innerText = state.teams.length;
+            const totalImagesEl = document.getElementById('stat-total-images');
+            if (totalStudentsEl) totalStudentsEl.innerText = window.state.attendance.length;
+            if (totalImagesEl) totalImagesEl.innerText = window.state.taskSubmissions.length;
         }
 
         function openImageViewer(url, caption) {
             const modal = document.getElementById('image-viewer-modal');
             const img = document.getElementById('viewer-img-target');
+            const cap = document.getElementById('viewer-img-caption');
             if (modal && img) {
                 img.src = url;
+                if(cap) cap.innerText = caption ? `Оқушы: ${caption}` : '';
                 modal.classList.remove('hidden');
             }
         }
 
-        function toggleImageViewer() {
+        function closeImageViewer() {
             document.getElementById('image-viewer-modal').classList.add('hidden');
         }
 
-        function clearAttendance() {
-            state.attendance = [];
-            renderAttendanceList();
-            updateMonitorStats();
-        }
-
-        function safeConfetti(options) {
-            if (typeof confetti === 'function') confetti(options);
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notif');
+            const toastMsg = document.getElementById('toast-msg');
+            if (toast && toastMsg) {
+                toastMsg.innerText = msg;
+                toast.classList.remove('hidden');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
         }
 
         function logActivity(text) {
             const logEl = document.getElementById('activity-log');
-            if(!logEl) return;
+            if (!logEl) return;
             const now = new Date();
             const timeStr = now.toLocaleTimeString('kk-KZ');
             const p = document.createElement('p');
